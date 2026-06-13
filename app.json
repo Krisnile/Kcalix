@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "零卡",
+    "slug": "kcalix",
+    "version": "1.0.0",
+    "scheme": "kcalix",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#16C098",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kcalix.app"
+    },
+    "android": {
+      "package": "com.kcalix.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E4F8F2",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "74cf3596-c80d-4dc7-838d-eab0b24f15fb"
+      }
+    },
+    "owner": "krisnile"
+  }
+}

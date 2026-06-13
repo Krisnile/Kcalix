@@ -1,0 +1,303 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Alert,
+  Image,
+  Linking,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '../../src/components/ui';
+import { images } from '../../src/images';
+import { useStore } from '../../src/store/AppStore';
+import { colors, font, radius, shadow, spacing } from '../../src/theme';
+import { ActivityLevel, Gender, Goal } from '../../src/types';
+import { bmiCategory, calcBMI, calcCalorieGoal, calcTDEE, goalLabel } from '../../src/utils/nutrition';
+import { latestWeight } from '../../src/utils/selectors';
+
+export default function ProfileScreen() {
+  const router = useRouter();
+  const { data, updateSettings, resetAll } = useStore();
+  const [editing, setEditing] = useState(false);
+  const profile = data.profile;
+  if (!profile) return null;
+
+  const current = latestWeight(data.weightLogs) ?? profile.weight;
+  const bmi = calcBMI(current, profile.height);
+  const cat = bmiCategory(bmi);
+  const goalCal = calcCalorieGoal(profile, current);
+  const tdee = calcTDEE(profile, current);
+
+  const confirmReset = () => {
+    Alert.alert('清除所有数据', '这将删除全部记录与个人资料，且无法恢复。确定继续吗？', [
+      { text: '取消', style: 'cancel' },
+      { text: '清除', style: 'destructive', onPress: () => { resetAll(); router.replace('/onboarding'); } },
+    ]);
+  };
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Text style={styles.headerTitle}>我的</Text>
+
+        {/* 个人资料卡 */}
+        <View style={styles.profileCard}>
+          <Image
+            source={profile.gender === 'male' ? images.avatarMale : images.avatarFemale}
+            style={styles.avatar}
+            resizeMode="cover"
+          />
+
+          <View style={{ flex: 1 }}>
+            <Text style={styles.name}>{profile.name}</Text>
+            <Text style={styles.sub}>
+              {profile.gender === 'male' ? '男' : '女'} · {profile.age}岁 · {profile.height}cm
+            </Text>
+            <View style={[styles.bmiTag, { backgroundColor: cat.color + '22' }]}>
+              <Text style={[styles.bmiText, { color: cat.color }]}>BMI {bmi} · {cat.label}</Text>
+            </View>
+          </View>
+          <Pressable style={styles.editBtn} onPress={() => setEditing(true)}>
+            <Ionicons name="create-outline" size={18} color={colors.primaryDark} />
+            <Text style={styles.editText}>编辑</Text>
+          </Pressable>
+        </View>
+
+        {/* 数据概览 */}
+        <View style={styles.statsRow}>
+          <StatBox label="当前体重" value={`${current}`} unit="kg" color={colors.weight} />
+          <StatBox label="目标体重" value={`${profile.targetWeight}`} unit="kg" color={colors.primary} />
+          <StatBox label="每日热量" value={`${goalCal}`} unit="kcal" color={colors.calorie} />
+        </View>
+        <View style={styles.infoCard}>
+          <InfoRow label="健康目标" value={goalLabel[profile.goal]} />
+          <InfoRow label="每日总消耗 (TDEE)" value={`${tdee} kcal`} />
+          <InfoRow label="每日饮水目标" value={`${profile.waterGoal} ml`} last />
+        </View>
+
+        {/* 设置 */}
+        <Group title="偏好设置">
+          <ToggleRow
+            icon="notifications-outline"
+            label="记录提醒"
+            value={data.settings.reminderEnabled}
+            onChange={(v) => updateSettings({ reminderEnabled: v })}
+          />
+        </Group>
+
+        {/* 帮助与反馈 */}
+        <Group title="帮助与反馈">
+          <MenuRow icon="headset-outline" label="联系客服" onPress={() => Linking.openURL('mailto:support@kcalix.app?subject=零卡客服')} />
+          <MenuRow icon="chatbubble-ellipses-outline" label="意见反馈" onPress={() => Linking.openURL('mailto:feedback@kcalix.app?subject=零卡意见反馈')} />
+        </Group>
+
+        {/* 关于 */}
+        <Group title="关于">
+          <MenuRow icon="information-circle-outline" label="关于零卡" onPress={() => router.push('/legal?type=about')} />
+          <MenuRow icon="document-text-outline" label="用户协议" onPress={() => router.push('/legal?type=terms')} />
+          <MenuRow icon="lock-closed-outline" label="隐私政策" onPress={() => router.push('/legal?type=privacy')} />
+          <MenuRow icon="list-outline" label="第三方开源清单" onPress={() => router.push('/legal?type=licenses')} />
+        </Group>
+
+        <Pressable style={styles.dangerBtn} onPress={confirmReset}>
+          <Ionicons name="trash-outline" size={18} color={colors.danger} />
+          <Text style={styles.dangerText}>清除所有数据</Text>
+        </Pressable>
+
+        <Text style={styles.version}>零卡 Kcalix v1.0.0</Text>
+        <View style={{ height: 20 }} />
+      </ScrollView>
+
+      <EditModal visible={editing} onClose={() => setEditing(false)} />
+    </SafeAreaView>
+  );
+}
+
+function EditModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const { data, updateProfile } = useStore();
+  const p = data.profile!;
+  const [name, setName] = useState(p.name);
+  const [gender, setGender] = useState<Gender>(p.gender);
+  const [age, setAge] = useState(String(p.age));
+  const [height, setHeight] = useState(String(p.height));
+  const [target, setTarget] = useState(String(p.targetWeight));
+  const [goal, setGoal] = useState<Goal>(p.goal);
+  const [activity, setActivity] = useState<ActivityLevel>(p.activity);
+  const [calGoal, setCalGoal] = useState(p.customCalorieGoal ? String(p.customCalorieGoal) : '');
+  const [water, setWater] = useState(String(p.waterGoal));
+
+  React.useEffect(() => {
+    if (visible) {
+      setName(p.name); setGender(p.gender); setAge(String(p.age)); setHeight(String(p.height));
+      setTarget(String(p.targetWeight)); setGoal(p.goal); setActivity(p.activity);
+      setCalGoal(p.customCalorieGoal ? String(p.customCalorieGoal) : ''); setWater(String(p.waterGoal));
+    }
+  }, [visible]);
+
+  const save = () => {
+    updateProfile({
+      name: name.trim() || '我',
+      gender,
+      age: parseInt(age, 10) || p.age,
+      height: parseInt(height, 10) || p.height,
+      targetWeight: parseFloat(target) || p.targetWeight,
+      goal,
+      activity,
+      customCalorieGoal: calGoal ? parseInt(calGoal, 10) : undefined,
+      waterGoal: parseInt(water, 10) || p.waterGoal,
+    });
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+        <View style={styles.modalHead}>
+          <Pressable onPress={onClose} hitSlop={10}><Text style={styles.modalCancel}>取消</Text></Pressable>
+          <Text style={styles.modalTitle}>编辑资料</Text>
+          <Pressable onPress={save} hitSlop={10}><Text style={styles.modalSave}>保存</Text></Pressable>
+        </View>
+        <ScrollView contentContainerStyle={{ padding: spacing.xl, gap: spacing.lg }} keyboardShouldPersistTaps="handled">
+          <Field label="昵称"><TextInput value={name} onChangeText={setName} style={styles.fieldInput} maxLength={12} /></Field>
+          <Field label="性别">
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              {(['female', 'male'] as Gender[]).map((g) => (
+                <Pressable key={g} onPress={() => setGender(g)} style={[styles.pill, gender === g && styles.pillActive]}>
+                  <Text style={[styles.pillText, gender === g && { color: '#fff' }]}>{g === 'male' ? '男' : '女'}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </Field>
+          <Field label="年龄（岁）"><TextInput value={age} onChangeText={setAge} keyboardType="numeric" style={styles.fieldInput} /></Field>
+          <Field label="身高（cm）"><TextInput value={height} onChangeText={setHeight} keyboardType="numeric" style={styles.fieldInput} /></Field>
+          <Field label="目标体重（kg）"><TextInput value={target} onChangeText={setTarget} keyboardType="numeric" style={styles.fieldInput} /></Field>
+          <Field label="健康目标">
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              {(['lose', 'keep', 'gain'] as Goal[]).map((g) => (
+                <Pressable key={g} onPress={() => setGoal(g)} style={[styles.pill, goal === g && styles.pillActive]}>
+                  <Text style={[styles.pillText, goal === g && { color: '#fff' }]}>{goalLabel[g]}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </Field>
+          <Field label="自定义每日热量目标（kcal，留空则自动计算）">
+            <TextInput value={calGoal} onChangeText={setCalGoal} keyboardType="numeric" placeholder="自动" placeholderTextColor={colors.textTertiary} style={styles.fieldInput} />
+          </Field>
+          <Field label="每日饮水目标（ml）"><TextInput value={water} onChangeText={setWater} keyboardType="numeric" style={styles.fieldInput} /></Field>
+          <Button label="保存修改" onPress={save} />
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      {children}
+    </View>
+  );
+}
+
+function StatBox({ label, value, unit, color }: { label: string; value: string; unit: string; color: string }) {
+  return (
+    <View style={styles.statBox}>
+      <Text style={[styles.statValue, { color }]}>{value}</Text>
+      <Text style={styles.statUnit}>{unit}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+  return (
+    <View style={[styles.infoRow, !last && styles.infoRowBorder]}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  );
+}
+
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <View style={{ marginTop: spacing.xl }}>
+      <Text style={styles.groupTitle}>{title}</Text>
+      <View style={styles.groupCard}>{children}</View>
+    </View>
+  );
+}
+
+function MenuRow({ icon, label, onPress }: { icon: any; label: string; onPress: () => void }) {
+  return (
+    <Pressable style={styles.menuRow} onPress={onPress}>
+      <Ionicons name={icon} size={20} color={colors.textSecondary} />
+      <Text style={styles.menuLabel}>{label}</Text>
+      <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+    </Pressable>
+  );
+}
+
+function ToggleRow({ icon, label, value, onChange }: { icon: any; label: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <View style={styles.menuRow}>
+      <Ionicons name={icon} size={20} color={colors.textSecondary} />
+      <Text style={styles.menuLabel}>{label}</Text>
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#fff" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.bg },
+  scroll: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
+  headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text, marginBottom: spacing.lg },
+
+  profileCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, ...shadow.card },
+  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  name: { fontSize: font.lg, fontWeight: '800', color: colors.text },
+  sub: { fontSize: font.sm, color: colors.textSecondary, marginTop: 2 },
+  bmiTag: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, marginTop: 6 },
+  bmiText: { fontSize: font.xs, fontWeight: '700' },
+  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.primarySoft, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radius.pill },
+  editText: { fontSize: font.sm, color: colors.primaryDark, fontWeight: '700' },
+
+  statsRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.lg },
+  statBox: { flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, alignItems: 'center', paddingVertical: spacing.lg, ...shadow.soft },
+  statValue: { fontSize: font.xl, fontWeight: '800' },
+  statUnit: { fontSize: 10, color: colors.textTertiary },
+  statLabel: { fontSize: font.xs, color: colors.textSecondary, marginTop: 4 },
+
+  infoCard: { backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: spacing.lg, marginTop: spacing.md, ...shadow.soft },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md },
+  infoRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider },
+  infoLabel: { fontSize: font.md, color: colors.textSecondary },
+  infoValue: { fontSize: font.md, color: colors.text, fontWeight: '600' },
+
+  groupTitle: { fontSize: font.sm, color: colors.textTertiary, fontWeight: '600', marginBottom: spacing.sm, marginLeft: spacing.xs },
+  groupCard: { backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: spacing.lg, ...shadow.soft },
+  menuRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
+  menuLabel: { flex: 1, fontSize: font.md, color: colors.text },
+
+  dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: spacing.xl, paddingVertical: spacing.lg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.danger + '40' },
+  dangerText: { color: colors.danger, fontSize: font.md, fontWeight: '700' },
+  version: { textAlign: 'center', color: colors.textTertiary, fontSize: font.xs, marginTop: spacing.lg },
+
+  modalHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingVertical: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  modalTitle: { fontSize: font.lg, fontWeight: '700', color: colors.text },
+  modalCancel: { fontSize: font.md, color: colors.textSecondary },
+  modalSave: { fontSize: font.md, color: colors.primary, fontWeight: '700' },
+  fieldLabel: { fontSize: font.sm, color: colors.textSecondary, marginBottom: spacing.sm, fontWeight: '600' },
+  fieldInput: { backgroundColor: colors.card, borderRadius: radius.md, paddingHorizontal: spacing.lg, height: 50, fontSize: font.md, color: colors.text, ...shadow.soft },
+  pill: { flex: 1, height: 44, borderRadius: radius.md, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', ...shadow.soft },
+  pillActive: { backgroundColor: colors.primary },
+  pillText: { fontSize: font.md, color: colors.textSecondary, fontWeight: '600' },
+});
