@@ -251,7 +251,7 @@ export default function ProfileScreen() {
           <Text style={styles.dangerText}>清除所有数据</Text>
         </Pressable>
 
-        <Text style={styles.version}>零卡 Kcalix v1.0.0</Text>
+        <Text style={styles.version}>零卡 Kcalix v1.0.1</Text>
         <View style={{ height: 20 }} />
       </ScrollView>
 

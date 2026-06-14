@@ -8,7 +8,7 @@ import { useStore } from '../../src/store/AppStore';
 import { font, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
 import { ExerciseLog, FoodLog } from '../../src/types';
 import { lastNDays, prettyDate, shortLabel } from '../../src/utils/date';
-import { calcTDEE } from '../../src/utils/nutrition';
+import { calcCalorieGoal } from '../../src/utils/nutrition';
 import {
   firstRecordDate,
   hasCalorieRecord,
@@ -24,7 +24,7 @@ interface DayBalance {
   date: string;
   intake: number;
   exercise: number;
-  metabolism: number;
+  dailyGoal: number;
   expenditure: number;
   net: number;
   cumIntake: number;
@@ -36,7 +36,7 @@ function buildDailyBalance(
   keys: string[],
   foodLogs: FoodLog[],
   exerciseLogs: ExerciseLog[],
-  tdee: number,
+  dailyGoal: number,
   recordFrom: string | null,
 ): DayBalance[] {
   if (!recordFrom) return [];
@@ -51,7 +51,7 @@ function buildDailyBalance(
 
     const dayIntake = sumFood(foodLogs, date);
     const dayExercise = sumExercise(exerciseLogs, date);
-    const dayExpenditure = tdee + dayExercise;
+    const dayExpenditure = dailyGoal + dayExercise;
     cumIntake += dayIntake;
     cumExpenditure += dayExpenditure;
 
@@ -59,7 +59,7 @@ function buildDailyBalance(
       date,
       intake: dayIntake,
       exercise: dayExercise,
-      metabolism: tdee,
+      dailyGoal,
       expenditure: dayExpenditure,
       net: dayIntake - dayExpenditure,
       cumIntake,
@@ -71,7 +71,7 @@ function buildDailyBalance(
   return result;
 }
 
-function buildAllTimeBalance(foodLogs: FoodLog[], exerciseLogs: ExerciseLog[], tdee: number): DayBalance[] {
+function buildAllTimeBalance(foodLogs: FoodLog[], exerciseLogs: ExerciseLog[], dailyGoal: number): DayBalance[] {
   const start = firstRecordDate(foodLogs, exerciseLogs);
   if (!start) return [];
 
@@ -80,7 +80,7 @@ function buildAllTimeBalance(foodLogs: FoodLog[], exerciseLogs: ExerciseLog[], t
   exerciseLogs.forEach((l) => dates.add(l.date));
 
   const keys = [...dates].filter((d) => d >= start).sort();
-  return buildDailyBalance(keys, foodLogs, exerciseLogs, tdee, start);
+  return buildDailyBalance(keys, foodLogs, exerciseLogs, dailyGoal, start);
 }
 
 export default function StatsScreen() {
@@ -91,14 +91,14 @@ export default function StatsScreen() {
   const days = period === 'week' ? 7 : 30;
   const profile = data.profile;
   const currentWeight = latestWeight(data.weightLogs) ?? undefined;
-  const tdee = profile ? calcTDEE(profile, currentWeight) : 2000;
+  const dailyGoal = profile ? calcCalorieGoal(profile, currentWeight) : 1800;
   const recordFrom = firstRecordDate(data.foodLogs, data.exerciseLogs);
 
   const keys = useMemo(() => lastNDays(days), [days]);
 
   const allTimeBalance = useMemo(
-    () => buildAllTimeBalance(data.foodLogs, data.exerciseLogs, tdee),
-    [data.foodLogs, data.exerciseLogs, tdee],
+    () => buildAllTimeBalance(data.foodLogs, data.exerciseLogs, dailyGoal),
+    [data.foodLogs, data.exerciseLogs, dailyGoal],
   );
 
   const dailyBalance = useMemo(
@@ -118,18 +118,18 @@ export default function StatsScreen() {
   const allTimeTotals = useMemo(() => {
     const last = allTimeBalance[allTimeBalance.length - 1];
     if (!last) {
-      return { intake: 0, exercise: 0, metabolism: 0, expenditure: 0, net: 0 };
+      return { intake: 0, exercise: 0, goalBase: 0, expenditure: 0, net: 0 };
     }
     const totalExercise = Math.round(data.exerciseLogs.reduce((s, l) => s + l.calories, 0));
-    const totalMetabolism = tdee * allTimeBalance.length;
+    const goalBase = dailyGoal * allTimeBalance.length;
     return {
       intake: last.cumIntake,
       exercise: totalExercise,
-      metabolism: totalMetabolism,
+      goalBase,
       expenditure: last.cumExpenditure,
       net: last.cumNet,
     };
-  }, [allTimeBalance, data.exerciseLogs, tdee]);
+  }, [allTimeBalance, data.exerciseLogs, dailyGoal]);
 
   const activeDays = dailyBalance.length || 1;
   const avgIntake = Math.round(dailyBalance.reduce((s, d) => s + d.intake, 0) / activeDays);
@@ -178,7 +178,7 @@ export default function StatsScreen() {
                 <CumMetric label="累计支出" value={allTimeTotals.expenditure} unit="kcal" color={colors.exercise} />
               </View>
               <Text style={styles.cumHint}>
-                支出含维持生命 {allTimeTotals.metabolism} kcal + 运动 {allTimeTotals.exercise} kcal
+                支出 = 每日热量 {allTimeTotals.goalBase} kcal + 运动 {allTimeTotals.exercise} kcal
               </Text>
               <View style={[styles.cumNet, { backgroundColor: allTimeTotals.net <= 0 ? colors.primarySoft : '#FEF3C7' }]}>
                 <Text style={styles.cumNetLabel}>净收支</Text>
@@ -212,7 +212,7 @@ export default function StatsScreen() {
             <Card padded={false}>
               <View style={[styles.cardTitleRow, { paddingHorizontal: spacing.lg, paddingTop: spacing.lg }]}>
                 <Text style={styles.cardTitle}>热量收支时间轴</Text>
-                <Text style={styles.cardHint}>仅显示有记录 · 代谢 {tdee} kcal</Text>
+                <Text style={styles.cardHint}>仅显示有记录 · 每日 {dailyGoal} kcal</Text>
               </View>
               <View style={styles.timeline}>
                 {[...dailyBalance].reverse().map((day, idx, arr) => (
@@ -316,8 +316,8 @@ function DayBalanceRow({ day, isFirst, isLast }: { day: DayBalance; isFirst: boo
           </Text>
         </View>
         <Text style={styles.timelineCum}>
-          累计 摄入 {day.cumIntake} · 支出 {day.cumExpenditure}（含维持生命 {day.metabolism}/天）· 净
-          {day.cumNet <= 0 ? '缺口' : '盈余'} {Math.abs(day.cumNet)}
+          累计 摄入 {day.cumIntake} · 支出 {day.cumExpenditure} · 净{day.cumNet <= 0 ? '缺口' : '盈余'}{' '}
+          {Math.abs(day.cumNet)}
         </Text>
       </View>
     </View>

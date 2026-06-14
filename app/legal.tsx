@@ -47,7 +47,7 @@ function About() {
     <View style={{ alignItems: 'center' }}>
       <Text style={{ fontSize: 64, marginTop: spacing.lg }}>🥗</Text>
       <Text style={styles.appName}>零卡 Kcalix</Text>
-      <Text style={styles.version}>版本 1.0.0</Text>
+      <Text style={styles.version}>版本 1.0.1</Text>
       <Text style={styles.aboutDesc}>
         零卡是一款简洁而强大的卡路里管理工具，帮助你科学记录每日的饮食摄入、运动消耗、体重变化与饮水情况，让健康管理成为一种轻松的日常习惯。
       </Text>

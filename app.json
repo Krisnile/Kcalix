@@ -2,7 +2,7 @@
   "expo": {
     "name": "零卡",
     "slug": "kcalix",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "scheme": "kcalix",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,6 +13,7 @@
     },
     "android": {
       "package": "com.kcalix.app",
+      "versionCode": 2,
       "adaptiveIcon": {
         "backgroundColor": "#E4F8F2",
         "foregroundImage": "./assets/android-icon-foreground.png",
