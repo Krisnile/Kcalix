@@ -117,17 +117,30 @@ export default function ProfileScreen() {
   const importCsv = async () => {
     try {
       const picked = await DocumentPicker.getDocumentAsync({
-        type: ['text/csv', 'text/comma-separated-values', 'application/csv', '*/*'],
+        type: ['text/csv', 'text/comma-separated-values', 'application/csv', 'text/plain', '*/*'],
         copyToCacheDirectory: true,
       });
       if (picked.canceled || !picked.assets?.[0]) return;
       setBusy(true);
-      const text = await FileSystem.readAsStringAsync(picked.assets[0].uri, { encoding: FileSystem.EncodingType.UTF8 });
-      const records = parseCsv(text.replace(/^\ufeff/, ''));
+
+      const asset = picked.assets[0];
+      let uri = asset.uri;
+      // 部分 Android 设备对 content:// 读取不稳定，先复制到缓存
+      if (!uri.startsWith('file://')) {
+        const cacheUri = `${FileSystem.cacheDirectory}kcalix-import.csv`;
+        await FileSystem.copyAsync({ from: uri, to: cacheUri });
+        uri = cacheUri;
+      }
+
+      const text = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.UTF8 });
+      const records = parseCsv(text);
       const total =
         records.weightLogs.length + records.foodLogs.length + records.exerciseLogs.length + records.waterLogs.length;
       if (total === 0) {
-        Alert.alert('未识别到数据', '该 CSV 文件中没有可导入的记录，请使用本应用导出的文件格式。');
+        Alert.alert(
+          '未识别到数据',
+          '该 CSV 中没有可导入的记录。请使用本应用「导出数据」生成的文件，或用 Excel 编辑后保持 type、date 等列名不变。',
+        );
         return;
       }
       Alert.alert(
@@ -146,7 +159,7 @@ export default function ProfileScreen() {
         ],
       );
     } catch (e) {
-      Alert.alert('导入失败', '无法读取或解析所选文件，请确认文件格式正确。');
+      Alert.alert('导入失败', '无法读取或解析所选文件。请确认是本应用导出的 CSV，且未被另存为其他格式。');
     } finally {
       setBusy(false);
     }

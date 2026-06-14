@@ -29,6 +29,17 @@ export function sumWater(logs: WaterLog[], date: string): number {
   return Math.round(logs.filter((l) => l.date === date).reduce((s, l) => s + l.amount, 0));
 }
 
+/** 最早有饮食或运动记录的日期 */
+export function firstRecordDate(foodLogs: FoodLog[], exerciseLogs: ExerciseLog[]): string | null {
+  const dates = [...foodLogs.map((l) => l.date), ...exerciseLogs.map((l) => l.date)];
+  if (!dates.length) return null;
+  return dates.sort()[0];
+}
+
+export function hasCalorieRecord(foodLogs: FoodLog[], exerciseLogs: ExerciseLog[], date: string): boolean {
+  return sumFood(foodLogs, date) > 0 || sumExercise(exerciseLogs, date) > 0;
+}
+
 export function latestWeight(logs: WeightLog[]): number | null {
   if (!logs.length) return null;
   const sorted = [...logs].sort((a, b) => a.date.localeCompare(b.date));

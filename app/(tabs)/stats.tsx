@@ -6,9 +6,17 @@ import { LineChart } from '../../src/components/charts';
 import { Card, Empty, Segmented } from '../../src/components/ui';
 import { useStore } from '../../src/store/AppStore';
 import { font, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
-import { daysBetween, lastNDays, prettyDate, shortLabel, todayKey, toKey } from '../../src/utils/date';
-import { calcCalorieGoal } from '../../src/utils/nutrition';
-import { latestWeight, sumExercise, sumFood, sumWater, weightForDate } from '../../src/utils/selectors';
+import { ExerciseLog, FoodLog } from '../../src/types';
+import { lastNDays, prettyDate, shortLabel } from '../../src/utils/date';
+import { calcTDEE } from '../../src/utils/nutrition';
+import {
+  firstRecordDate,
+  hasCalorieRecord,
+  latestWeight,
+  sumExercise,
+  sumFood,
+  sumWater,
+} from '../../src/utils/selectors';
 
 const W = Dimensions.get('window').width;
 
@@ -16,6 +24,7 @@ interface DayBalance {
   date: string;
   intake: number;
   exercise: number;
+  metabolism: number;
   expenditure: number;
   net: number;
   cumIntake: number;
@@ -23,26 +32,55 @@ interface DayBalance {
   cumNet: number;
 }
 
-function buildDailyBalance(keys: string[], intake: number[], burned: number[], goal: number): DayBalance[] {
+function buildDailyBalance(
+  keys: string[],
+  foodLogs: FoodLog[],
+  exerciseLogs: ExerciseLog[],
+  tdee: number,
+  recordFrom: string | null,
+): DayBalance[] {
+  if (!recordFrom) return [];
+
   let cumIntake = 0;
   let cumExpenditure = 0;
-  return keys.map((date, i) => {
-    const dayIntake = intake[i];
-    const dayExercise = burned[i];
-    const dayExpenditure = goal + dayExercise;
+  const result: DayBalance[] = [];
+
+  for (const date of keys) {
+    if (date < recordFrom) continue;
+    if (!hasCalorieRecord(foodLogs, exerciseLogs, date)) continue;
+
+    const dayIntake = sumFood(foodLogs, date);
+    const dayExercise = sumExercise(exerciseLogs, date);
+    const dayExpenditure = tdee + dayExercise;
     cumIntake += dayIntake;
     cumExpenditure += dayExpenditure;
-    return {
+
+    result.push({
       date,
       intake: dayIntake,
       exercise: dayExercise,
+      metabolism: tdee,
       expenditure: dayExpenditure,
       net: dayIntake - dayExpenditure,
       cumIntake,
       cumExpenditure,
       cumNet: cumIntake - cumExpenditure,
-    };
-  });
+    });
+  }
+
+  return result;
+}
+
+function buildAllTimeBalance(foodLogs: FoodLog[], exerciseLogs: ExerciseLog[], tdee: number): DayBalance[] {
+  const start = firstRecordDate(foodLogs, exerciseLogs);
+  if (!start) return [];
+
+  const dates = new Set<string>();
+  foodLogs.forEach((l) => dates.add(l.date));
+  exerciseLogs.forEach((l) => dates.add(l.date));
+
+  const keys = [...dates].filter((d) => d >= start).sort();
+  return buildDailyBalance(keys, foodLogs, exerciseLogs, tdee, start);
 }
 
 export default function StatsScreen() {
@@ -52,62 +90,62 @@ export default function StatsScreen() {
   const [period, setPeriod] = useState<'week' | 'month'>('week');
   const days = period === 'week' ? 7 : 30;
   const profile = data.profile;
-  const goal = profile ? calcCalorieGoal(profile, latestWeight(data.weightLogs) ?? undefined) : 1800;
+  const currentWeight = latestWeight(data.weightLogs) ?? undefined;
+  const tdee = profile ? calcTDEE(profile, currentWeight) : 2000;
+  const recordFrom = firstRecordDate(data.foodLogs, data.exerciseLogs);
 
   const keys = useMemo(() => lastNDays(days), [days]);
 
-  const intake = keys.map((k) => sumFood(data.foodLogs, k));
-  const burned = keys.map((k) => sumExercise(data.exerciseLogs, k));
-  const water = keys.map((k) => sumWater(data.waterLogs, k));
+  const allTimeBalance = useMemo(
+    () => buildAllTimeBalance(data.foodLogs, data.exerciseLogs, tdee),
+    [data.foodLogs, data.exerciseLogs, tdee],
+  );
 
   const dailyBalance = useMemo(
-    () => buildDailyBalance(keys, intake, burned, goal),
-    [keys, intake, burned, goal],
+    () => allTimeBalance.filter((d) => keys.includes(d.date)),
+    [allTimeBalance, keys],
   );
 
-  const periodTotals = useMemo(() => {
-    const last = dailyBalance[dailyBalance.length - 1];
-    return last
-      ? { intake: last.cumIntake, expenditure: last.cumExpenditure, net: last.cumNet }
-      : { intake: 0, expenditure: 0, net: 0 };
-  }, [dailyBalance]);
+  const periodTotals = useMemo(
+    () => ({
+      intake: dailyBalance.reduce((s, d) => s + d.intake, 0),
+      expenditure: dailyBalance.reduce((s, d) => s + d.expenditure, 0),
+      net: dailyBalance.reduce((s, d) => s + d.net, 0),
+    }),
+    [dailyBalance],
+  );
 
   const allTimeTotals = useMemo(() => {
-    const totalIntake = Math.round(data.foodLogs.reduce((s, l) => s + l.calories, 0));
+    const last = allTimeBalance[allTimeBalance.length - 1];
+    if (!last) {
+      return { intake: 0, exercise: 0, metabolism: 0, expenditure: 0, net: 0 };
+    }
     const totalExercise = Math.round(data.exerciseLogs.reduce((s, l) => s + l.calories, 0));
-    const startDate = profile ? toKey(new Date(profile.createdAt)) : keys[0];
-    const metabolismDays = daysBetween(startDate, todayKey());
-    const totalMetabolism = goal * metabolismDays;
-    const totalExpenditure = totalExercise + totalMetabolism;
+    const totalMetabolism = tdee * allTimeBalance.length;
     return {
-      intake: totalIntake,
+      intake: last.cumIntake,
       exercise: totalExercise,
       metabolism: totalMetabolism,
-      expenditure: totalExpenditure,
-      net: totalIntake - totalExpenditure,
+      expenditure: last.cumExpenditure,
+      net: last.cumNet,
     };
-  }, [data.foodLogs, data.exerciseLogs, profile, goal, keys]);
+  }, [allTimeBalance, data.exerciseLogs, tdee]);
 
-  // 日均（仅统计有记录的天，避免被空白天拉低）
-  const activeDays = keys.filter((k, i) => intake[i] > 0 || burned[i] > 0 || water[i] > 0).length || 1;
-  const avg = (arr: number[]) => Math.round(arr.reduce((s, v) => s + v, 0) / activeDays);
-  const avgIntake = avg(intake);
-  const avgBurned = avg(burned);
-  const avgWater = avg(water);
-  const net = avgIntake - avgBurned - goal;
+  const activeDays = dailyBalance.length || 1;
+  const avgIntake = Math.round(dailyBalance.reduce((s, d) => s + d.intake, 0) / activeDays);
+  const avgBurned = Math.round(dailyBalance.reduce((s, d) => s + d.exercise, 0) / activeDays);
+  const avgWater = Math.round(
+    keys.filter((k) => recordFrom && k >= recordFrom).reduce((s, k) => s + sumWater(data.waterLogs, k), 0) /
+      activeDays,
+  );
+  const net = Math.round(dailyBalance.reduce((s, d) => s + d.net, 0) / activeDays);
 
-  // 体重趋势（每天取值，保留最新点）
-  const weightPoints = useMemo(
-    () => keys.map((k) => ({ label: shortLabel(k), value: weightForDate(data.weightLogs, k) })),
-    [keys, data.weightLogs],
+  const balanceChartPoints = useMemo(
+    () => dailyBalance.map((d) => ({ label: shortLabel(d.date), value: d.net })),
+    [dailyBalance],
   );
 
-  const startWeight = weightForDate(data.weightLogs, keys[0]);
-  const endWeight = latestWeight(data.weightLogs);
-  const weightDelta =
-    startWeight != null && endWeight != null ? Math.round((endWeight - startWeight) * 10) / 10 : null;
-
-  const hasData = activeDays > 0 && (avgIntake > 0 || avgBurned > 0 || avgWater > 0);
+  const hasData = dailyBalance.length > 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -140,7 +178,7 @@ export default function StatsScreen() {
                 <CumMetric label="累计支出" value={allTimeTotals.expenditure} unit="kcal" color={colors.exercise} />
               </View>
               <Text style={styles.cumHint}>
-                支出含基础代谢 {allTimeTotals.metabolism} kcal + 运动 {allTimeTotals.exercise} kcal
+                支出含维持生命 {allTimeTotals.metabolism} kcal + 运动 {allTimeTotals.exercise} kcal
               </Text>
               <View style={[styles.cumNet, { backgroundColor: allTimeTotals.net <= 0 ? colors.primarySoft : '#FEF3C7' }]}>
                 <Text style={styles.cumNetLabel}>净收支</Text>
@@ -174,7 +212,7 @@ export default function StatsScreen() {
             <Card padded={false}>
               <View style={[styles.cardTitleRow, { paddingHorizontal: spacing.lg, paddingTop: spacing.lg }]}>
                 <Text style={styles.cardTitle}>热量收支时间轴</Text>
-                <Text style={styles.cardHint}>按日 · 目标 {goal} kcal</Text>
+                <Text style={styles.cardHint}>仅显示有记录 · 代谢 {tdee} kcal</Text>
               </View>
               <View style={styles.timeline}>
                 {[...dailyBalance].reverse().map((day, idx, arr) => (
@@ -205,21 +243,21 @@ export default function StatsScreen() {
               </View>
             </Card>
 
-            {/* 体重变化 */}
+            {/* 热量收支趋势 */}
             <Card>
               <View style={styles.cardTitleRow}>
-                <Text style={styles.cardTitle}>体重变化</Text>
-                {weightDelta != null ? (
-                  <Text style={[styles.delta, { color: weightDelta <= 0 ? colors.success : colors.warning }]}>
-                    {weightDelta > 0 ? '+' : ''}
-                    {weightDelta} kg
-                  </Text>
-                ) : null}
+                <Text style={styles.cardTitle}>热量收支趋势</Text>
+                <Text style={styles.cardHint}>负值为缺口 · 正值为盈余</Text>
               </View>
-              {data.weightLogs.length === 0 ? (
-                <Empty icon="⚖️" title="暂无体重记录" />
+              {balanceChartPoints.length < 2 ? (
+                <Empty icon="📈" title="记录更多天数后显示趋势" subtitle="至少需要 2 天有饮食或运动记录" />
               ) : (
-                <LineChart data={weightPoints} width={W - spacing.xl * 2 - spacing.lg * 2} color={colors.weight} unit="kg" />
+                <LineChart
+                  data={balanceChartPoints}
+                  width={W - spacing.xl * 2 - spacing.lg * 2}
+                  color={colors.calorie}
+                  unit=" kcal"
+                />
               )}
             </Card>
           </View>
@@ -246,7 +284,6 @@ function DayBalanceRow({ day, isFirst, isLast }: { day: DayBalance; isFirst: boo
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const surplus = day.net > 0;
-  const hasLog = day.intake > 0 || day.exercise > 0;
 
   return (
     <View style={[styles.timelineRow, isLast && styles.timelineRowLast]}>
@@ -254,7 +291,7 @@ function DayBalanceRow({ day, isFirst, isLast }: { day: DayBalance; isFirst: boo
         <View style={[styles.timelineDot, isFirst && styles.timelineDotActive]} />
         {!isLast ? <View style={styles.timelineLine} /> : null}
       </View>
-      <View style={[styles.timelineContent, !hasLog && styles.timelineContentMuted]}>
+      <View style={styles.timelineContent}>
         <View style={styles.timelineHeader}>
           <Text style={styles.timelineDate}>{prettyDate(day.date)}</Text>
           <Text style={[styles.timelineNet, { color: surplus ? colors.warning : colors.primaryDark }]}>
@@ -279,8 +316,8 @@ function DayBalanceRow({ day, isFirst, isLast }: { day: DayBalance; isFirst: boo
           </Text>
         </View>
         <Text style={styles.timelineCum}>
-          累计 摄入 {day.cumIntake} · 支出 {day.cumExpenditure} · 净{day.cumNet <= 0 ? '缺口' : '盈余'}{' '}
-          {Math.abs(day.cumNet)}
+          累计 摄入 {day.cumIntake} · 支出 {day.cumExpenditure}（含维持生命 {day.metabolism}/天）· 净
+          {day.cumNet <= 0 ? '缺口' : '盈余'} {Math.abs(day.cumNet)}
         </Text>
       </View>
     </View>
@@ -335,7 +372,6 @@ const makeStyles = (colors: Palette) =>
     cardTitle: { fontSize: font.lg, fontWeight: '700', color: colors.text },
     cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
     cardHint: { fontSize: font.sm, color: colors.textTertiary },
-    delta: { fontSize: font.md, fontWeight: '800' },
 
     timeline: { paddingHorizontal: spacing.lg },
     timelineRow: { flexDirection: 'row', minHeight: 88 },
@@ -350,7 +386,6 @@ const makeStyles = (colors: Palette) =>
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.divider,
     },
-    timelineContentMuted: { opacity: 0.65 },
     timelineHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     timelineDate: { fontSize: font.md, fontWeight: '700', color: colors.text },
     timelineNet: { fontSize: font.md, fontWeight: '800' },
