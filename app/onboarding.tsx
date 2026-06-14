@@ -132,9 +132,9 @@ export default function Onboarding() {
         )}
 
         {step === 'weight' && (
-          <StepWrap title="体重目标" subtitle="设定起点与想要达到的体重">
-            <Stepper label="当前体重" value={weight} unit="kg" min={30} max={200} step={0.1} onChange={setWeight} />
-            <Stepper label="目标体重" value={target} unit="kg" min={30} max={200} step={0.1} onChange={setTarget} />
+          <StepWrap title="体重目标" subtitle="设定起点与想要达到的体重，也可直接输入">
+            <Stepper label="当前体重" value={weight} unit="kg" min={30} max={200} step={0.1} editable onChange={setWeight} />
+            <Stepper label="目标体重" value={target} unit="kg" min={30} max={200} step={0.1} editable onChange={setTarget} />
           </StepWrap>
         )}
 
@@ -261,6 +261,10 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
   );
 }
 
+function formatStepperValue(value: number, step: number) {
+  return step >= 1 ? String(Math.round(value)) : value.toFixed(1);
+}
+
 function Stepper({
   label,
   value,
@@ -268,6 +272,7 @@ function Stepper({
   min,
   max,
   step,
+  editable = false,
   onChange,
 }: {
   label: string;
@@ -276,10 +281,29 @@ function Stepper({
   min: number;
   max: number;
   step: number;
+  editable?: boolean;
   onChange: (v: number) => void;
 }) {
-  const dec = () => onChange(Math.max(min, Math.round((value - step) * 10) / 10));
-  const inc = () => onChange(Math.min(max, Math.round((value + step) * 10) / 10));
+  const [text, setText] = useState(formatStepperValue(value, step));
+  const [focused, setFocused] = useState(false);
+
+  React.useEffect(() => {
+    if (!focused) setText(formatStepperValue(value, step));
+  }, [value, step, focused]);
+
+  const round = (n: number) => (step >= 1 ? Math.round(n) : Math.round(n * 10) / 10);
+  const dec = () => onChange(Math.max(min, round(value - step)));
+  const inc = () => onChange(Math.min(max, round(value + step)));
+
+  const commit = () => {
+    const parsed = parseFloat(text.replace(',', '.'));
+    if (Number.isFinite(parsed)) {
+      onChange(Math.min(max, Math.max(min, round(parsed))));
+    } else {
+      setText(formatStepperValue(value, step));
+    }
+  };
+
   return (
     <View style={styles.stepperCard}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -288,7 +312,24 @@ function Stepper({
           <Text style={styles.stepperBtnText}>−</Text>
         </Pressable>
         <View style={styles.stepperValueBox}>
-          <Text style={styles.stepperValue}>{Number.isInteger(value) ? value : value.toFixed(1)}</Text>
+          {editable ? (
+            <TextInput
+              value={text}
+              onChangeText={setText}
+              onFocus={() => setFocused(true)}
+              onBlur={() => {
+                setFocused(false);
+                commit();
+              }}
+              onSubmitEditing={commit}
+              keyboardType={step < 1 ? 'decimal-pad' : 'number-pad'}
+              returnKeyType="done"
+              selectTextOnFocus
+              style={styles.stepperValueInput}
+            />
+          ) : (
+            <Text style={styles.stepperValue}>{formatStepperValue(value, step)}</Text>
+          )}
           <Text style={styles.stepperUnit}>{unit}</Text>
         </View>
         <Pressable onPress={inc} style={styles.stepperBtn}>
@@ -334,6 +375,14 @@ const styles = StyleSheet.create({
   stepperBtnText: { fontSize: 28, color: colors.primaryDark, fontWeight: '600' },
   stepperValueBox: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
   stepperValue: { fontSize: 40, fontWeight: '800', color: colors.text },
+  stepperValueInput: {
+    minWidth: 72,
+    fontSize: 40,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
+    paddingVertical: 0,
+  },
   stepperUnit: { fontSize: font.md, color: colors.textSecondary },
 
   goalRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },

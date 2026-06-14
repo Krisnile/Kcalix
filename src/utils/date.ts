@@ -60,3 +60,9 @@ export function lastNDays(n: number, end: string = todayKey()): string[] {
   for (let i = n - 1; i >= 0; i--) arr.push(addDays(end, -i));
   return arr;
 }
+
+// 计算两个日期之间包含的天数（含首尾）
+export function daysBetween(from: string, to: string): number {
+  const ms = parseKey(to).getTime() - parseKey(from).getTime();
+  return Math.max(1, Math.round(ms / 86400000) + 1);
+}
