@@ -17,6 +17,7 @@
     "expo-document-picker": "~56.0.0",
     "expo-file-system": "~56.0.0",
     "expo-font": "~56.0.0",
+    "expo-image-picker": "~56.0.0",
     "expo-linking": "~56.0.14",
     "expo-sharing": "~56.0.0",
     "expo-splash-screen": "~56.0.0",

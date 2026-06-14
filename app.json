@@ -36,6 +36,12 @@
           "resizeMode": "contain",
           "backgroundColor": "#16C098"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "零卡需要访问你的相册，以便你选择自定义头像。"
+        }
       ]
     ],
     "experiments": {

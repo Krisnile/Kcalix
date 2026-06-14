@@ -11,6 +11,7 @@ export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 export interface Profile {
   name: string;
   gender: Gender;
+  avatarUri?: string; // 自定义头像本地路径（为空则用默认头像）
   height: number; // cm
   weight: number; // kg，初始体重
   targetWeight: number; // kg

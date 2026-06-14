@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useMemo, useState } from 'react';
@@ -30,13 +31,45 @@ import { latestWeight } from '../../src/utils/selectors';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { data, updateSettings, resetAll, replaceRecords } = useStore();
+  const { data, updateProfile, updateSettings, resetAll, replaceRecords } = useStore();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const profile = data.profile;
   if (!profile) return null;
+
+  const pickAvatar = async () => {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('需要相册权限', '请在系统设置中允许零卡访问相册后重试。');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        updateProfile({ avatarUri: result.assets[0].uri });
+      }
+    } catch (e) {
+      Alert.alert('选择失败', '无法读取所选图片，请重试。');
+    }
+  };
+
+  const changeAvatar = () => {
+    const options: { text: string; style?: 'cancel' | 'destructive'; onPress?: () => void }[] = [
+      { text: '从相册选择', onPress: pickAvatar },
+    ];
+    if (profile.avatarUri) {
+      options.push({ text: '恢复默认头像', style: 'destructive', onPress: () => updateProfile({ avatarUri: undefined }) });
+    }
+    options.push({ text: '取消', style: 'cancel' });
+    Alert.alert('修改头像', '选择一张图片作为你的头像', options);
+  };
 
   const current = latestWeight(data.weightLogs) ?? profile.weight;
   const bmi = calcBMI(current, profile.height);
@@ -126,11 +159,16 @@ export default function ProfileScreen() {
 
         {/* 个人资料卡 */}
         <View style={styles.profileCard}>
-          <Image
-            source={profile.gender === 'male' ? images.avatarMale : images.avatarFemale}
-            style={styles.avatar}
-            resizeMode="cover"
-          />
+          <Pressable onPress={changeAvatar} style={styles.avatarWrap}>
+            <Image
+              source={profile.avatarUri ? { uri: profile.avatarUri } : profile.gender === 'male' ? images.avatarMale : images.avatarFemale}
+              style={styles.avatar}
+              resizeMode="cover"
+            />
+            <View style={styles.avatarBadge}>
+              <Ionicons name="camera" size={12} color="#fff" />
+            </View>
+          </Pressable>
 
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{profile.name}</Text>
@@ -382,7 +420,9 @@ const makeStyles = (colors: Palette) =>
   headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text, marginBottom: spacing.lg },
 
   profileCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, ...shadow.card },
-  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  avatarWrap: { width: 60, height: 60 },
+  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primarySoft },
+  avatarBadge: { position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.card },
   name: { fontSize: font.lg, fontWeight: '800', color: colors.text },
   sub: { fontSize: font.sm, color: colors.textSecondary, marginTop: 2 },
   bmiTag: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, marginTop: 6 },
