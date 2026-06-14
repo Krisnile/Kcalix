@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, font, radius, shadow } from '../../src/theme';
+import { font, Palette, radius, shadow, useColors } from '../../src/theme';
 
 const TABS: {
   name: string;
@@ -33,6 +33,8 @@ export default function TabsLayout() {
 
 function CustomTabBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       {TABS.map((tab, i) => {
@@ -71,29 +73,30 @@ function CustomTabBar({ state, navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  bar: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    paddingTop: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    ...shadow.card,
-  },
-  item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3 },
-  label: { fontSize: font.xs, color: colors.textTertiary },
-  centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: 3 },
-  centerBtn: {
-    width: 54,
-    height: 54,
-    borderRadius: radius.pill,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -22,
-    borderWidth: 4,
-    borderColor: colors.card,
-    ...shadow.float,
-  },
-  centerLabel: { fontSize: font.xs, color: colors.primary, fontWeight: '700' },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    bar: {
+      flexDirection: 'row',
+      backgroundColor: colors.card,
+      paddingTop: 10,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+      ...shadow.card,
+    },
+    item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3 },
+    label: { fontSize: font.xs, color: colors.textTertiary },
+    centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: 3 },
+    centerBtn: {
+      width: 54,
+      height: 54,
+      borderRadius: radius.pill,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: -22,
+      borderWidth: 4,
+      borderColor: colors.card,
+      ...shadow.float,
+    },
+    centerLabel: { fontSize: font.xs, color: colors.primary, fontWeight: '700' },
+  });

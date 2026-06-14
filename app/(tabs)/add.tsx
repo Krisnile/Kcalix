@@ -13,10 +13,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { DateField } from '../../src/components/DatePicker';
 import { Button, Card, Segmented } from '../../src/components/ui';
 import { exercisePresets, FoodItem, foods } from '../../src/data/foods';
 import { useStore } from '../../src/store/AppStore';
-import { colors, font, mealColors, radius, shadow, spacing } from '../../src/theme';
+import { font, mealColors, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
 import { MealType } from '../../src/types';
 import { todayKey } from '../../src/utils/date';
 import { latestWeight, mealLabel, mealOrder } from '../../src/utils/selectors';
@@ -24,6 +25,8 @@ import { latestWeight, mealLabel, mealOrder } from '../../src/utils/selectors';
 type Mode = 'diet' | 'exercise' | 'weight' | 'water';
 
 export default function AddScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [mode, setMode] = useState<Mode>('diet');
   const [toast, setToast] = useState<string | null>(null);
 
@@ -70,7 +73,9 @@ export default function AddScreen() {
 /* ============== 饮食 ============== */
 function DietForm({ onDone }: { onDone: (m: string) => void }) {
   const { addFood } = useStore();
-  const date = todayKey();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const [date, setDate] = useState(todayKey());
   const params = useLocalSearchParams<{ food?: string; cal?: string }>();
   const [meal, setMeal] = useState<MealType>(guessMeal());
   const [query, setQuery] = useState('');
@@ -115,6 +120,11 @@ function DietForm({ onDone }: { onDone: (m: string) => void }) {
 
   return (
     <View style={{ gap: spacing.lg }}>
+      <Card>
+        <Text style={styles.label}>记录日期</Text>
+        <DateField value={date} onChange={setDate} />
+      </Card>
+
       <Card>
         <Text style={styles.label}>选择餐次</Text>
         <View style={styles.mealRow}>
@@ -192,7 +202,9 @@ function DietForm({ onDone }: { onDone: (m: string) => void }) {
 /* ============== 运动 ============== */
 function ExerciseForm({ onDone }: { onDone: (m: string) => void }) {
   const { addExercise, data } = useStore();
-  const date = todayKey();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const [date, setDate] = useState(todayKey());
   const weight = latestWeight(data.weightLogs) ?? data.profile?.weight ?? 60;
   const [preset, setPreset] = useState(exercisePresets[2]);
   const [minutes, setMinutes] = useState(30);
@@ -207,6 +219,11 @@ function ExerciseForm({ onDone }: { onDone: (m: string) => void }) {
 
   return (
     <View style={{ gap: spacing.lg }}>
+      <Card>
+        <Text style={styles.label}>记录日期</Text>
+        <DateField value={date} onChange={setDate} />
+      </Card>
+
       <Card>
         <Text style={styles.label}>选择运动</Text>
         <View style={styles.exerciseGrid}>
@@ -245,43 +262,60 @@ function ExerciseForm({ onDone }: { onDone: (m: string) => void }) {
 /* ============== 体重 ============== */
 function WeightForm({ onDone }: { onDone: (m: string) => void }) {
   const { addWeight, data } = useStore();
-  const date = todayKey();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const [date, setDate] = useState(todayKey());
   const [w, setW] = useState(latestWeight(data.weightLogs) ?? data.profile?.weight ?? 60);
 
   const submit = () => {
     addWeight({ date, weight: Math.round(w * 10) / 10 });
-    onDone(`已记录今日体重 ${Math.round(w * 10) / 10}kg`);
+    onDone(`已记录体重 ${Math.round(w * 10) / 10}kg`);
   };
 
   return (
-    <Card>
-      <Text style={styles.label}>今日体重</Text>
-      <View style={[styles.gramRow, { marginVertical: spacing.lg }]}>
-        <Pressable style={styles.gramBtn} onPress={() => setW(Math.max(30, Math.round((w - 0.1) * 10) / 10))}>
-          <Text style={styles.gramBtnText}>−</Text>
-        </Pressable>
-        <View style={{ alignItems: 'center', flex: 1 }}>
-          <Text style={[styles.gramValue, { fontSize: 44, color: colors.weight }]}>{w.toFixed(1)}</Text>
-          <Text style={styles.gramCal}>kg</Text>
+    <View style={{ gap: spacing.lg }}>
+      <Card>
+        <Text style={styles.label}>记录日期</Text>
+        <DateField value={date} onChange={setDate} />
+      </Card>
+
+      <Card>
+        <Text style={styles.label}>体重</Text>
+        <View style={[styles.gramRow, { marginVertical: spacing.lg }]}>
+          <Pressable style={styles.gramBtn} onPress={() => setW(Math.max(30, Math.round((w - 0.1) * 10) / 10))}>
+            <Text style={styles.gramBtnText}>−</Text>
+          </Pressable>
+          <View style={{ alignItems: 'center', flex: 1 }}>
+            <Text style={[styles.gramValue, { fontSize: 44, color: colors.weight }]}>{w.toFixed(1)}</Text>
+            <Text style={styles.gramCal}>kg</Text>
+          </View>
+          <Pressable style={styles.gramBtn} onPress={() => setW(Math.min(200, Math.round((w + 0.1) * 10) / 10))}>
+            <Text style={styles.gramBtnText}>+</Text>
+          </Pressable>
         </View>
-        <Pressable style={styles.gramBtn} onPress={() => setW(Math.min(200, Math.round((w + 0.1) * 10) / 10))}>
-          <Text style={styles.gramBtnText}>+</Text>
-        </Pressable>
-      </View>
-      <Button label="保存体重" onPress={submit} />
-    </Card>
+        <Button label="保存体重" onPress={submit} />
+      </Card>
+    </View>
   );
 }
 
 /* ============== 喝水 ============== */
 function WaterForm({ onDone }: { onDone: (m: string) => void }) {
   const { addWater } = useStore();
-  const date = todayKey();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const [date, setDate] = useState(todayKey());
   const [amount, setAmount] = useState(250);
   const quick = [100, 200, 250, 300, 500, 800];
 
   return (
-    <Card>
+    <View style={{ gap: spacing.lg }}>
+      <Card>
+        <Text style={styles.label}>记录日期</Text>
+        <DateField value={date} onChange={setDate} />
+      </Card>
+
+      <Card>
       <Text style={styles.label}>饮水量 (ml)</Text>
       <View style={styles.waterGrid}>
         {quick.map((q) => (
@@ -298,7 +332,8 @@ function WaterForm({ onDone }: { onDone: (m: string) => void }) {
         }}
         style={{ marginTop: spacing.lg }}
       />
-    </Card>
+      </Card>
+    </View>
   );
 }
 
@@ -310,7 +345,8 @@ function guessMeal(): MealType {
   return 'snack';
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.md },
   headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text },
@@ -349,6 +385,6 @@ const styles = StyleSheet.create({
   waterChipActive: { borderColor: colors.water, backgroundColor: colors.waterSoft },
   waterChipText: { fontSize: font.md, color: colors.textSecondary },
 
-  toast: { position: 'absolute', bottom: 30, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.text, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderRadius: radius.pill },
+  toast: { position: 'absolute', bottom: 30, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1F2937', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderRadius: radius.pill },
   toastText: { color: '#fff', fontSize: font.sm, fontWeight: '600' },
-});
+  });

@@ -17,6 +17,7 @@ const defaultSettings: AppSettings = {
   termsAccepted: false,
   reminderEnabled: true,
   units: 'metric',
+  theme: 'light',
 };
 
 const initialData: AppData = {
@@ -47,6 +48,12 @@ interface StoreContext {
   removeFood: (id: string) => void;
   removeExercise: (id: string) => void;
   removeWater: (id: string) => void;
+  replaceRecords: (records: {
+    weightLogs: WeightLog[];
+    foodLogs: FoodLog[];
+    exerciseLogs: ExerciseLog[];
+    waterLogs: WaterLog[];
+  }) => void;
   resetAll: () => void;
 }
 
@@ -156,6 +163,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setData((d) => ({ ...d, waterLogs: d.waterLogs.filter((x) => x.id !== id) }));
   }, []);
 
+  const replaceRecords = useCallback(
+    (records: { weightLogs: WeightLog[]; foodLogs: FoodLog[]; exerciseLogs: ExerciseLog[]; waterLogs: WaterLog[] }) => {
+      setData((d) => ({
+        ...d,
+        weightLogs: [...records.weightLogs].sort((a, b) => a.date.localeCompare(b.date)),
+        foodLogs: records.foodLogs,
+        exerciseLogs: records.exerciseLogs,
+        waterLogs: records.waterLogs,
+      }));
+    },
+    [],
+  );
+
   const resetAll = useCallback(() => {
     setData(initialData);
     AsyncStorage.removeItem(STORAGE_KEY).catch(() => {});
@@ -176,6 +196,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       removeFood,
       removeExercise,
       removeWater,
+      replaceRecords,
       resetAll,
     }),
     [
@@ -192,6 +213,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       removeFood,
       removeExercise,
       removeWater,
+      replaceRecords,
       resetAll,
     ],
   );

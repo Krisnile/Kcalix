@@ -11,7 +11,7 @@ import Svg, {
   Stop,
   Text as SvgText,
 } from 'react-native-svg';
-import { colors } from '../theme';
+import { useColors } from '../theme';
 
 /* ============================================================
  * 圆环进度（每日热量预算 / 饮水）
@@ -20,8 +20,8 @@ export function RingProgress({
   size = 180,
   stroke = 16,
   progress,
-  color = colors.primary,
-  trackColor = '#EDF1F5',
+  color,
+  trackColor,
   children,
 }: {
   size?: number;
@@ -31,20 +31,23 @@ export function RingProgress({
   trackColor?: string;
   children?: React.ReactNode;
 }) {
+  const c = useColors();
+  const ringColor = color ?? c.primary;
+  const track = trackColor ?? c.divider;
   const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
+  const circ = 2 * Math.PI * r;
   const clamped = Math.max(0, Math.min(1, progress));
-  const offset = c * (1 - clamped);
+  const offset = circ * (1 - clamped);
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} style={{ position: 'absolute' }}>
         <Defs>
           <LinearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor={color} />
-            <Stop offset="1" stopColor={colors.primaryDark} />
+            <Stop offset="0" stopColor={ringColor} />
+            <Stop offset="1" stopColor={c.primaryDark} />
           </LinearGradient>
         </Defs>
-        <Circle cx={size / 2} cy={size / 2} r={r} stroke={trackColor} strokeWidth={stroke} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={track} strokeWidth={stroke} fill="none" />
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -53,7 +56,7 @@ export function RingProgress({
           strokeWidth={stroke}
           fill="none"
           strokeLinecap="round"
-          strokeDasharray={`${c} ${c}`}
+          strokeDasharray={`${circ} ${circ}`}
           strokeDashoffset={offset}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
@@ -93,7 +96,7 @@ export function LineChart({
   data,
   width,
   height = 210,
-  color = colors.weight,
+  color,
   unit = '',
 }: {
   data: Point[];
@@ -102,6 +105,8 @@ export function LineChart({
   color?: string;
   unit?: string;
 }) {
+  const c = useColors();
+  const line = color ?? c.weight;
   const [active, setActive] = useState<number | null>(null);
 
   const padL = 38;
@@ -180,8 +185,8 @@ export function LineChart({
       <Svg width={width} height={height}>
         <Defs>
           <LinearGradient id="lineArea" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={color} stopOpacity={0.25} />
-            <Stop offset="1" stopColor={color} stopOpacity={0.02} />
+            <Stop offset="0" stopColor={line} stopOpacity={0.25} />
+            <Stop offset="1" stopColor={line} stopOpacity={0.02} />
           </LinearGradient>
         </Defs>
 
@@ -190,8 +195,8 @@ export function LineChart({
           const y = yFor(t);
           return (
             <G key={i}>
-              <Line x1={padL} y1={y} x2={width - padR} y2={y} stroke={colors.divider} strokeWidth={1} />
-              <SvgText x={4} y={y + 4} fontSize={10} fill={colors.textTertiary}>
+              <Line x1={padL} y1={y} x2={width - padR} y2={y} stroke={c.divider} strokeWidth={1} />
+              <SvgText x={4} y={y + 4} fontSize={10} fill={c.textTertiary}>
                 {t.toFixed(t >= 100 ? 0 : 1)}
               </SvgText>
             </G>
@@ -206,20 +211,20 @@ export function LineChart({
           return (
             <G key={i}>
               <Path d={areaPath} fill="url(#lineArea)" />
-              <Path d={linePath} stroke={color} strokeWidth={3} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+              <Path d={linePath} stroke={line} strokeWidth={3} fill="none" strokeLinejoin="round" strokeLinecap="round" />
             </G>
           );
         })}
 
         {/* 数据点 */}
         {valid.map((d) => (
-          <Circle key={d.i} cx={xFor(d.i)} cy={yFor(d.value)} r={3.5} fill={colors.white} stroke={color} strokeWidth={2} />
+          <Circle key={d.i} cx={xFor(d.i)} cy={yFor(d.value)} r={3.5} fill={c.card} stroke={line} strokeWidth={2} />
         ))}
 
         {/* X 轴标签 */}
         {data.map((d, i) =>
           i % Math.ceil(data.length / 6 || 1) === 0 || i === data.length - 1 ? (
-            <SvgText key={`x${i}`} x={xFor(i)} y={height - 6} fontSize={10} fill={colors.textTertiary} textAnchor="middle">
+            <SvgText key={`x${i}`} x={xFor(i)} y={height - 6} fontSize={10} fill={c.textTertiary} textAnchor="middle">
               {d.label}
             </SvgText>
           ) : null,
@@ -228,9 +233,9 @@ export function LineChart({
         {/* 触摸辅助线 + 气泡 */}
         {activePoint && activePoint.value != null ? (
           <G>
-            <Line x1={ax} y1={padT} x2={ax} y2={padT + innerH} stroke={color} strokeWidth={1} strokeDasharray="3 3" opacity={0.6} />
-            <Circle cx={ax} cy={ay} r={6} fill={color} stroke={colors.white} strokeWidth={2} />
-            <Rect x={tipX} y={tipY} width={tipW} height={tipH} rx={8} fill={colors.text} opacity={0.92} />
+            <Line x1={ax} y1={padT} x2={ax} y2={padT + innerH} stroke={line} strokeWidth={1} strokeDasharray="3 3" opacity={0.6} />
+            <Circle cx={ax} cy={ay} r={6} fill={line} stroke={c.card} strokeWidth={2} />
+            <Rect x={tipX} y={tipY} width={tipW} height={tipH} rx={8} fill="#0F172A" opacity={0.92} />
             <SvgText x={tipX + tipW / 2} y={tipY + 16} fontSize={12} fontWeight="bold" fill="#fff" textAnchor="middle">
               {activePoint.value}
               {unit}
@@ -258,9 +263,9 @@ export function BarChart({
   data,
   width,
   height = 190,
-  color = colors.calorie,
+  color,
   goal,
-  goalColor = colors.danger,
+  goalColor,
   unit = '',
 }: {
   data: Bar[];
@@ -271,6 +276,9 @@ export function BarChart({
   goalColor?: string;
   unit?: string;
 }) {
+  const c = useColors();
+  const fillColor = color ?? c.calorie;
+  const goalLine = goalColor ?? c.danger;
   const [active, setActive] = useState<number | null>(null);
   const padT = 20;
   const padB = 26;
@@ -301,8 +309,8 @@ export function BarChart({
       <Svg width={width} height={height}>
         <Defs>
           <LinearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={color} stopOpacity={1} />
-            <Stop offset="1" stopColor={color} stopOpacity={0.6} />
+            <Stop offset="0" stopColor={fillColor} stopOpacity={1} />
+            <Stop offset="1" stopColor={fillColor} stopOpacity={0.6} />
           </LinearGradient>
         </Defs>
 
@@ -312,7 +320,7 @@ export function BarChart({
             y1={yFor(goal)}
             x2={width - padR}
             y2={yFor(goal)}
-            stroke={goalColor}
+            stroke={goalLine}
             strokeWidth={1.5}
             strokeDasharray="4 4"
           />
@@ -331,15 +339,15 @@ export function BarChart({
                 width={barW}
                 height={h}
                 rx={7}
-                fill={isActive ? colors.primary : 'url(#barFill)'}
+                fill={isActive ? c.primary : 'url(#barFill)'}
               />
               {isActive && d.value > 0 ? (
-                <SvgText x={x} y={y - 6} fontSize={11} fontWeight="bold" fill={colors.text} textAnchor="middle">
+                <SvgText x={x} y={y - 6} fontSize={11} fontWeight="bold" fill={c.text} textAnchor="middle">
                   {d.value}
                   {unit}
                 </SvgText>
               ) : null}
-              <SvgText x={x} y={height - 8} fontSize={10} fill={isActive ? colors.text : colors.textTertiary} textAnchor="middle">
+              <SvgText x={x} y={height - 8} fontSize={10} fill={isActive ? c.text : c.textTertiary} textAnchor="middle">
                 {d.label}
               </SvgText>
             </G>

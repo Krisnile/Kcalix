@@ -58,10 +58,13 @@ export interface WaterLog {
   createdAt: string;
 }
 
+export type ThemeMode = 'light' | 'dark' | 'system';
+
 export interface AppSettings {
   termsAccepted: boolean;
   reminderEnabled: boolean;
   units: 'metric'; // 预留
+  theme: ThemeMode;
 }
 
 export interface AppData {

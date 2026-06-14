@@ -133,8 +133,8 @@ export default function Onboarding() {
 
         {step === 'weight' && (
           <StepWrap title="体重目标" subtitle="设定起点与想要达到的体重">
-            <Stepper label="当前体重" value={weight} unit="kg" min={30} max={200} step={0.5} onChange={setWeight} />
-            <Stepper label="目标体重" value={target} unit="kg" min={30} max={200} step={0.5} onChange={setTarget} />
+            <Stepper label="当前体重" value={weight} unit="kg" min={30} max={200} step={0.1} onChange={setWeight} />
+            <Stepper label="目标体重" value={target} unit="kg" min={30} max={200} step={0.1} onChange={setTarget} />
           </StepWrap>
         )}
 

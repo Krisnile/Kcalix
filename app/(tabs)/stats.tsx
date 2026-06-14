@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChart, LineChart } from '../../src/components/charts';
 import { Card, Empty, Segmented } from '../../src/components/ui';
 import { useStore } from '../../src/store/AppStore';
-import { colors, font, radius, shadow, spacing } from '../../src/theme';
+import { font, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
 import { lastNDays, shortLabel, weekday } from '../../src/utils/date';
 import { calcCalorieGoal } from '../../src/utils/nutrition';
 import { latestWeight, sumExercise, sumFood, sumWater, weightForDate } from '../../src/utils/selectors';
@@ -14,6 +14,8 @@ const W = Dimensions.get('window').width;
 
 export default function StatsScreen() {
   const { data } = useStore();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [period, setPeriod] = useState<'week' | 'month'>('week');
   const days = period === 'week' ? 7 : 30;
   const profile = data.profile;
@@ -136,6 +138,8 @@ export default function StatsScreen() {
 }
 
 function StatBox({ icon, color, label, value, unit }: { icon: any; color: string; label: string; value: number; unit: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.statBox}>
       <Ionicons name={icon} size={20} color={color} />
@@ -146,26 +150,27 @@ function StatBox({ icon, color, label, value, unit }: { icon: any; color: string
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.md },
-  headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text },
-  scroll: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.bg },
+    header: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.md },
+    headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text },
+    scroll: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
 
-  netCard: { alignItems: 'flex-start', ...shadow.float },
-  netLabel: { color: 'rgba(255,255,255,0.9)', fontSize: font.md },
-  netValue: { color: '#fff', fontSize: 48, fontWeight: '800', marginTop: 2 },
-  netUnit: { color: 'rgba(255,255,255,0.9)', fontSize: font.md },
-  netHint: { color: 'rgba(255,255,255,0.92)', fontSize: font.sm, marginTop: spacing.sm },
+    netCard: { alignItems: 'flex-start', ...shadow.float },
+    netLabel: { color: 'rgba(255,255,255,0.9)', fontSize: font.md },
+    netValue: { color: '#fff', fontSize: 48, fontWeight: '800', marginTop: 2 },
+    netUnit: { color: 'rgba(255,255,255,0.9)', fontSize: font.md },
+    netHint: { color: 'rgba(255,255,255,0.92)', fontSize: font.sm, marginTop: spacing.sm },
 
-  statsRow: { flexDirection: 'row', gap: spacing.md },
-  statBox: { flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, alignItems: 'center', paddingVertical: spacing.lg, gap: 2, ...shadow.soft },
-  statValue: { fontSize: font.xl, fontWeight: '800' },
-  statUnit: { fontSize: 10, color: colors.textTertiary },
-  statLabel: { fontSize: font.xs, color: colors.textSecondary, marginTop: 2 },
+    statsRow: { flexDirection: 'row', gap: spacing.md },
+    statBox: { flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, alignItems: 'center', paddingVertical: spacing.lg, gap: 2, ...shadow.soft },
+    statValue: { fontSize: font.xl, fontWeight: '800' },
+    statUnit: { fontSize: 10, color: colors.textTertiary },
+    statLabel: { fontSize: font.xs, color: colors.textSecondary, marginTop: 2 },
 
-  cardTitle: { fontSize: font.lg, fontWeight: '700', color: colors.text },
-  cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
-  cardHint: { fontSize: font.sm, color: colors.textTertiary },
-  delta: { fontSize: font.md, fontWeight: '800' },
-});
+    cardTitle: { fontSize: font.lg, fontWeight: '700', color: colors.text },
+    cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
+    cardHint: { fontSize: font.sm, color: colors.textTertiary },
+    delta: { fontSize: font.md, fontWeight: '800' },
+  });

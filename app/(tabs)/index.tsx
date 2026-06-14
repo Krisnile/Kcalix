@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChart, LineChart, RingProgress } from '../../src/components/charts';
 import { Card, Empty, Segmented, confirmDelete } from '../../src/components/ui';
 import { useStore } from '../../src/store/AppStore';
-import { colors, font, mealColors, radius, shadow, spacing } from '../../src/theme';
+import { font, mealColors, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
 import { MealType } from '../../src/types';
 import { addDays, lastNDays, prettyDate, shortLabel, timeOf, todayKey, weekday } from '../../src/utils/date';
 import { bmiCategory, calcBMI, calcCalorieGoal } from '../../src/utils/nutrition';
@@ -25,6 +25,8 @@ type RecordView = 'weight' | 'diet' | 'water';
 const W = Dimensions.get('window').width;
 
 export default function RecordScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [view, setView] = useState<RecordView>('diet');
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -55,6 +57,8 @@ export default function RecordScreen() {
 function DietView() {
   const router = useRouter();
   const { data, removeFood, removeExercise } = useStore();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [date, setDate] = useState(todayKey());
   const goal = data.profile ? calcCalorieGoal(data.profile, latestWeight(data.weightLogs) ?? undefined) : 1800;
 
@@ -114,6 +118,8 @@ function MealCard({
   onAdd: () => void;
   onDelete: (id: string) => void;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const total = items.reduce((s, i) => s + i.calories, 0);
   const mc = mealColors[meal];
   return (
@@ -165,6 +171,8 @@ function ExerciseCard({
   onAdd: () => void;
   onDelete: (id: string) => void;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Card>
       <View style={styles.mealHeader}>
@@ -200,6 +208,8 @@ function ExerciseCard({
 function WeightView() {
   const router = useRouter();
   const { data, removeWeight } = useStore();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [range, setRange] = useState<'week' | 'month' | 'year'>('week');
   const recentWeights = [...data.weightLogs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
   const profile = data.profile;
@@ -309,6 +319,8 @@ function WeightView() {
 }
 
 function GoalProgress({ start, current, target }: { start: number; current: number; target: number }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const totalNeeded = Math.abs(start - target) || 1;
   const done = Math.abs(start - current);
   const ratio = Math.max(0, Math.min(1, done / totalNeeded));
@@ -330,6 +342,8 @@ function GoalProgress({ start, current, target }: { start: number; current: numb
 /* ============== 喝水 ============== */
 function WaterView() {
   const { data, addWater, removeWater } = useStore();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const date = todayKey();
   const goal = data.profile?.waterGoal ?? 2000;
   const today = sumWater(data.waterLogs, date);
@@ -404,6 +418,8 @@ function WaterView() {
 
 /* ============== 公共小组件 ============== */
 function DateNav({ date, onChange }: { date: string; onChange: (d: string) => void }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isToday = date === todayKey();
   return (
     <View style={styles.dateNav}>
@@ -423,6 +439,8 @@ function DateNav({ date, onChange }: { date: string; onChange: (d: string) => vo
 }
 
 function StatMini({ icon, color, label, value }: { icon: any; color: string; label: string; value: number }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.statMini}>
       <Ionicons name={icon} size={18} color={color} />
@@ -433,6 +451,8 @@ function StatMini({ icon, color, label, value }: { icon: any; color: string; lab
 }
 
 function SideStat({ label, value, color }: { label: string; value: string; color: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.sideStat}>
       <Text style={styles.sideStatLabel}>{label}</Text>
@@ -442,6 +462,7 @@ function SideStat({ label, value, color }: { label: string; value: string; color
 }
 
 function Legend({ color, label, dashed }: { color: string; label: string; dashed?: boolean }) {
+  const colors = useColors();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <View style={{ width: 16, height: 0, borderTopWidth: 2, borderColor: color, borderStyle: dashed ? 'dashed' : 'solid' }} />
@@ -450,7 +471,8 @@ function Legend({ color, label, dashed }: { color: string; label: string; dashed
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.md },
   headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text },
@@ -510,4 +532,4 @@ const styles = StyleSheet.create({
   quickRow: { flexDirection: 'row', gap: spacing.md },
   quickBtn: { flex: 1, alignItems: 'center', gap: 4, backgroundColor: colors.waterSoft, borderRadius: radius.md, paddingVertical: spacing.lg },
   quickText: { fontSize: font.md, fontWeight: '700', color: colors.water },
-});
+  });

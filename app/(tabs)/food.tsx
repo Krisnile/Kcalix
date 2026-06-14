@@ -15,12 +15,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { categories, FoodCategory, foods } from '../../src/data/foods';
 import { RemoteFood, searchOnlineFoods } from '../../src/data/foodApi';
-import { colors, font, radius, shadow, spacing } from '../../src/theme';
+import { font, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
 
 // 列表统一展示类型（本地 / 在线通用）
 interface DisplayFood {
   id: string;
   name: string;
+  original?: string;
   calories: number;
   protein?: number;
   fat?: number;
@@ -33,6 +34,8 @@ interface DisplayFood {
 
 export default function FoodScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [query, setQuery] = useState('');
   const [cat, setCat] = useState<FoodCategory | '全部'>('全部');
   const [detail, setDetail] = useState<DisplayFood | null>(null);
@@ -45,12 +48,17 @@ export default function FoodScreen() {
   const trimmed = query.trim();
   const searching = trimmed.length > 0;
 
-  // 本地匹配（即时）
+  // 本地匹配（即时，模糊：忽略大小写与空格，双向包含）
   const localMatches = useMemo<DisplayFood[]>(() => {
     if (!searching) {
       return foods.filter((f) => cat === '全部' || f.category === cat);
     }
-    return foods.filter((f) => f.name.includes(trimmed));
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+    const q = norm(trimmed);
+    return foods.filter((f) => {
+      const n = norm(f.name);
+      return n.includes(q) || q.includes(n) || (f.category && norm(f.category).includes(q));
+    });
   }, [trimmed, searching, cat]);
 
   // 在线搜索（去抖 400ms）
@@ -194,7 +202,11 @@ export default function FoodScreen() {
                 ) : (
                   <Text style={styles.foodCat}>{item.category}</Text>
                 )}
-                {item.brand ? (
+                {item.original ? (
+                  <Text style={styles.foodCat} numberOfLines={1}>
+                    {item.original}
+                  </Text>
+                ) : item.brand ? (
                   <Text style={styles.foodCat} numberOfLines={1}>
                     {item.brand}
                   </Text>
@@ -228,6 +240,8 @@ export default function FoodScreen() {
 }
 
 function FoodDetailModal({ item, onClose, onAdd }: { item: DisplayFood | null; onClose: () => void; onAdd: () => void }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Modal visible={!!item} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.modalBg} onPress={onClose}>
@@ -241,7 +255,7 @@ function FoodDetailModal({ item, onClose, onAdd }: { item: DisplayFood | null; o
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sheetName}>{item.name}</Text>
-                  <Text style={styles.sheetCat}>{item.brand || item.category || (item.online ? '在线食物' : '')}</Text>
+                  <Text style={styles.sheetCat}>{item.original || item.brand || item.category || (item.online ? '在线食物' : '')}</Text>
                 </View>
               </View>
 
@@ -269,6 +283,8 @@ function FoodDetailModal({ item, onClose, onAdd }: { item: DisplayFood | null; o
 }
 
 function Macro({ label, value, color }: { label: string; value?: number; color: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.macro}>
       <Text style={[styles.macroValue, { color }]}>{value != null ? `${value}g` : '—'}</Text>
@@ -277,7 +293,8 @@ function Macro({ label, value, color }: { label: string; value?: number; color: 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
   headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text },
@@ -325,4 +342,4 @@ const styles = StyleSheet.create({
   macroLabel: { fontSize: font.xs, color: colors.textSecondary, marginTop: 2 },
   addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.primary, height: 52, borderRadius: radius.md, marginTop: spacing.xl },
   addBtnText: { color: '#fff', fontSize: font.md, fontWeight: '700' },
-});
+  });

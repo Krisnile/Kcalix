@@ -1,7 +1,12 @@
 // 全局设计系统：配色、间距、圆角、阴影、字号
 // 统一管理，保证全 App 视觉一致、简洁现代
+// 支持浅色 / 深色双主题：组件通过 useColors() 获取当前主题色板
 
-export const colors = {
+import { useColorScheme } from 'react-native';
+import { useStore } from './store/AppStore';
+
+// 浅色主题
+export const lightColors = {
   // 基础背景与文字
   bg: '#F5F7FA',
   card: '#FFFFFF',
@@ -38,7 +43,66 @@ export const colors = {
   shadow: '#0F172A',
 };
 
-// 餐次配色（早/午/晚/加餐）
+export type Palette = typeof lightColors;
+
+// 深色主题（与浅色保持相同的键）
+export const darkColors: Palette = {
+  bg: '#0B1120',
+  card: '#1B2436',
+  text: '#F1F5F9',
+  textSecondary: '#9FB0C3',
+  textTertiary: '#6B7C92',
+  border: '#2C3950',
+  divider: '#141C2B',
+
+  primary: '#1ED5A8',
+  primaryDark: '#3DE0B6',
+  primarySoft: '#12362C',
+
+  weight: '#8B95F6',
+  weightSoft: '#23264A',
+  diet: '#1ED5A8',
+  dietSoft: '#12362C',
+  water: '#56C7FA',
+  waterSoft: '#102E40',
+  exercise: '#FBA45C',
+  exerciseSoft: '#36281A',
+  calorie: '#FB8E3C',
+  calorieSoft: '#372418',
+
+  success: '#34D27B',
+  warning: '#FBBF24',
+  danger: '#F87171',
+
+  white: '#FFFFFF',
+  black: '#000000',
+  shadow: '#000000',
+};
+
+// 默认（浅色）色板：用于阴影定义、引导页等静态场景
+export const colors = lightColors;
+
+export type ThemeMode = 'light' | 'dark' | 'system';
+
+// 根据设置 + 系统外观，返回当前生效的色板
+export function useColors(): Palette {
+  const { data } = useStore();
+  const system = useColorScheme();
+  const mode: ThemeMode = data.settings.theme ?? 'light';
+  const resolved = mode === 'system' ? (system === 'dark' ? 'dark' : 'light') : mode;
+  return resolved === 'dark' ? darkColors : lightColors;
+}
+
+// 当前是否为深色（用于 StatusBar 等）
+export function useIsDark(): boolean {
+  const { data } = useStore();
+  const system = useColorScheme();
+  const mode: ThemeMode = data.settings.theme ?? 'light';
+  const resolved = mode === 'system' ? (system === 'dark' ? 'dark' : 'light') : mode;
+  return resolved === 'dark';
+}
+
+// 餐次配色（早/午/晚/加餐）— 两种主题通用
 export const mealColors: Record<string, { color: string; soft: string }> = {
   breakfast: { color: '#FBBF24', soft: '#FEF6E0' },
   lunch: { color: '#16C098', soft: '#E4F8F2' },

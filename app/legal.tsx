@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, font, radius, shadow, spacing } from '../src/theme';
+import { font, Palette, radius, shadow, spacing, useColors } from '../src/theme';
 
 type LegalType = 'about' | 'terms' | 'privacy' | 'licenses';
 
@@ -16,6 +16,8 @@ const titles: Record<LegalType, string> = {
 
 export default function LegalScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { type } = useLocalSearchParams<{ type: LegalType }>();
   const t = (type as LegalType) || 'about';
 
@@ -39,6 +41,8 @@ export default function LegalScreen() {
 }
 
 function About() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={{ alignItems: 'center' }}>
       <Text style={{ fontSize: 64, marginTop: spacing.lg }}>🥗</Text>
@@ -53,12 +57,15 @@ function About() {
         <Feature icon="water-outline" text="每日饮水量记录与提醒" />
         <Feature icon="book-outline" text="常见食物热量数据库" />
       </View>
+      <Text style={styles.openSource}>本应用基于 MIT 协议开源，欢迎自由使用与二次开发。</Text>
       <Text style={styles.copyright}>数据均保存在本地设备 · 用心守护你的隐私</Text>
     </View>
   );
 }
 
 function Feature({ icon, text }: { icon: any; text: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.feature}>
       <Ionicons name={icon} size={20} color={colors.primary} />
@@ -68,6 +75,8 @@ function Feature({ icon, text }: { icon: any; text: string }) {
 }
 
 function Paragraphs({ items }: { items: { h?: string; p: string }[] }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={{ gap: spacing.lg }}>
       {items.map((it, i) => (
@@ -81,6 +90,8 @@ function Paragraphs({ items }: { items: { h?: string; p: string }[] }) {
 }
 
 function Licenses() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const libs = [
     { name: 'React Native', license: 'MIT' },
     { name: 'Expo / Expo Router', license: 'MIT' },
@@ -95,7 +106,7 @@ function Licenses() {
       <Text style={[styles.p, { marginBottom: spacing.md }]}>本应用基于以下优秀的开源项目构建，在此致谢：</Text>
       {libs.map((l, i) => (
         <View key={l.name} style={[styles.licenseRow, i < libs.length - 1 && styles.licenseBorder]}>
-          <Text style={styles.licenseName}>{l.name}</Text>
+          <Text style={styles.licenseName} numberOfLines={2}>{l.name}</Text>
           <Text style={styles.licenseTag}>{l.license}</Text>
         </View>
       ))}
@@ -121,7 +132,8 @@ const privacyText: { h?: string; p: string }[] = [
   { h: '五、联系我们', p: '如对隐私有任何疑问，可通过应用内「联系客服」与我们沟通。' },
 ];
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   closeBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
@@ -139,9 +151,10 @@ const styles = StyleSheet.create({
   h: { fontSize: font.md, fontWeight: '700', color: colors.text, marginBottom: spacing.sm },
   p: { fontSize: font.md, color: colors.textSecondary, lineHeight: 24 },
 
+  openSource: { fontSize: font.sm, color: colors.textSecondary, marginTop: spacing.xl, textAlign: 'center', lineHeight: 22 },
   licenseCard: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, ...shadow.soft },
-  licenseRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.md },
+  licenseRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.md, gap: spacing.md },
   licenseBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider },
-  licenseName: { fontSize: font.md, color: colors.text },
-  licenseTag: { fontSize: font.xs, color: colors.primaryDark, backgroundColor: colors.primarySoft, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, fontWeight: '700' },
-});
+  licenseName: { flex: 1, fontSize: font.md, color: colors.text },
+  licenseTag: { flexShrink: 0, fontSize: font.xs, color: colors.primaryDark, backgroundColor: colors.primarySoft, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, fontWeight: '700', overflow: 'hidden' },
+  });

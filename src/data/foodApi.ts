@@ -4,6 +4,7 @@
 export interface RemoteFood {
   id: string;
   name: string;
+  original?: string; // 翻译前的原文（如英文名）
   brand?: string;
   calories: number; // 每 100g kcal
   protein?: number;
@@ -17,6 +18,41 @@ function round1(v: any): number | undefined {
   const n = Number(v);
   if (!isFinite(n)) return undefined;
   return Math.round(n * 10) / 10;
+}
+
+const CJK = /[\u4e00-\u9fff]/;
+const hasCJK = (s: string) => CJK.test(s);
+
+// 翻译结果缓存，避免重复请求
+const transCache = new Map<string, string>();
+
+// 批量把非中文名称翻译成中文（使用免费 gtx 接口，失败时回退原文）
+async function translateNames(names: string[], signal?: AbortSignal): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  const uniq = Array.from(new Set(names.filter((n) => n && !hasCJK(n))));
+  for (const n of uniq) if (transCache.has(n)) map.set(n, transCache.get(n)!);
+  const need = uniq.filter((n) => !transCache.has(n));
+  if (need.length === 0) return map;
+
+  try {
+    const q = need.join('\n');
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q=${encodeURIComponent(q)}`;
+    const res = await fetch(url, { signal });
+    if (res.ok) {
+      const data = await res.json();
+      const segs: any[] = Array.isArray(data?.[0]) ? data[0] : [];
+      const joined = segs.map((s) => (Array.isArray(s) ? s[0] : '')).join('');
+      const parts = joined.split('\n');
+      need.forEach((orig, i) => {
+        const t = (parts[i] || '').trim() || orig;
+        transCache.set(orig, t);
+        map.set(orig, t);
+      });
+    }
+  } catch {
+    // 翻译失败：保持原文
+  }
+  return map;
 }
 
 const ENDPOINT = 'https://world.openfoodfacts.org/cgi/search.pl';
@@ -71,5 +107,23 @@ export async function searchOnlineFoods(query: string, signal?: AbortSignal): Pr
     });
     if (out.length >= 30) break;
   }
+
+  // 把英文/外文名称翻译成中文展示，原文保留为副标题
+  try {
+    const translations = await translateNames(
+      out.map((o) => o.name),
+      signal,
+    );
+    for (const o of out) {
+      const zh = translations.get(o.name);
+      if (zh && zh !== o.name) {
+        o.original = o.name;
+        o.name = zh;
+      }
+    }
+  } catch {
+    // 忽略翻译错误
+  }
+
   return out;
 }

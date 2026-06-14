@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -10,7 +10,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { colors, font, radius, shadow, spacing } from '../theme';
+import { font, Palette, radius, shadow, spacing, useColors } from '../theme';
 
 // 统一的删除二次确认，防止误触
 export function confirmDelete(onConfirm: () => void, name?: string) {
@@ -34,6 +34,8 @@ export function Card({
   style?: StyleProp<ViewStyle>;
   padded?: boolean;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={[styles.card, padded && { padding: spacing.lg }, style]}>{children}</View>
   );
@@ -41,6 +43,8 @@ export function Card({
 
 // 区块标题
 export function SectionTitle({ title, action }: { title: string; action?: React.ReactNode }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.sectionRow}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -67,6 +71,8 @@ export function Button({
   style?: StyleProp<ViewStyle>;
   icon?: React.ReactNode;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isPrimary = variant === 'primary';
   const isDanger = variant === 'danger';
   const isGhost = variant === 'ghost';
@@ -106,6 +112,8 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
   style?: StyleProp<ViewStyle>;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={[styles.segmented, style]}>
       {options.map((opt) => {
@@ -124,6 +132,8 @@ export function Segmented<T extends string>({
 
 // 标签 / 徽章
 export function Tag({ text, color, soft }: { text: string; color: string; soft: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={[styles.tag, { backgroundColor: soft }]}>
       <Text style={[styles.tagText, { color }]}>{text}</Text>
@@ -133,6 +143,8 @@ export function Tag({ text, color, soft }: { text: string; color: string; soft: 
 
 // 空状态
 export function Empty({ icon = '🗒️', title, subtitle }: { icon?: string; title: string; subtitle?: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.empty}>
       <Text style={{ fontSize: 40 }}>{icon}</Text>
@@ -143,13 +155,15 @@ export function Empty({ icon = '🗒️', title, subtitle }: { icon?: string; ti
 }
 
 export function Row({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return <View style={[styles.row, style]}>{children}</View>;
 }
 
 export function Txt({
   children,
   size = font.md,
-  color = colors.text,
+  color,
   weight = '400',
   style,
 }: {
@@ -159,51 +173,53 @@ export function Txt({
   weight?: TextStyle['fontWeight'];
   style?: StyleProp<TextStyle>;
 }) {
-  return <Text style={[{ fontSize: size, color, fontWeight: weight }, style]}>{children}</Text>;
+  const colors = useColors();
+  return <Text style={[{ fontSize: size, color: color ?? colors.text, fontWeight: weight }, style]}>{children}</Text>;
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    ...shadow.card,
-  },
-  sectionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  sectionTitle: { fontSize: font.lg, fontWeight: '700', color: colors.text },
-  button: {
-    height: 52,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  buttonInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  buttonText: { fontSize: font.md, fontWeight: '700' },
-  segmented: {
-    flexDirection: 'row',
-    backgroundColor: colors.divider,
-    borderRadius: radius.pill,
-    padding: 4,
-  },
-  segItem: { flex: 1 },
-  segPill: {
-    height: 38,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segPillActive: { backgroundColor: colors.white, ...shadow.soft },
-  segText: { fontSize: font.sm, color: colors.textSecondary, fontWeight: '600' },
-  segTextActive: { color: colors.text, fontWeight: '700' },
-  tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
-  tagText: { fontSize: font.xs, fontWeight: '700' },
-  empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, gap: 6 },
-  emptyTitle: { fontSize: font.md, fontWeight: '700', color: colors.text, marginTop: 6 },
-  emptySub: { fontSize: font.sm, color: colors.textTertiary, textAlign: 'center' },
-  row: { flexDirection: 'row', alignItems: 'center' },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: radius.lg,
+      ...shadow.card,
+    },
+    sectionRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    sectionTitle: { fontSize: font.lg, fontWeight: '700', color: colors.text },
+    button: {
+      height: 52,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
+    },
+    buttonInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    buttonText: { fontSize: font.md, fontWeight: '700' },
+    segmented: {
+      flexDirection: 'row',
+      backgroundColor: colors.divider,
+      borderRadius: radius.pill,
+      padding: 4,
+    },
+    segItem: { flex: 1 },
+    segPill: {
+      height: 38,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    segPillActive: { backgroundColor: colors.card, ...shadow.soft },
+    segText: { fontSize: font.sm, color: colors.textSecondary, fontWeight: '600' },
+    segTextActive: { color: colors.text, fontWeight: '700' },
+    tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
+    tagText: { fontSize: font.xs, fontWeight: '700' },
+    empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, gap: 6 },
+    emptyTitle: { fontSize: font.md, fontWeight: '700', color: colors.text, marginTop: 6 },
+    emptySub: { fontSize: font.sm, color: colors.textTertiary, textAlign: 'center' },
+    row: { flexDirection: 'row', alignItems: 'center' },
+  });

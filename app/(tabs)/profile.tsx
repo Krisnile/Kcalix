@@ -1,6 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import * as Sharing from 'expo-sharing';
+import React, { useMemo, useState } from 'react';
 import {
   Alert,
   Image,
@@ -18,15 +21,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../src/components/ui';
 import { images } from '../../src/images';
 import { useStore } from '../../src/store/AppStore';
-import { colors, font, radius, shadow, spacing } from '../../src/theme';
+import { font, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
 import { ActivityLevel, Gender, Goal } from '../../src/types';
+import { buildCsv, parseCsv } from '../../src/utils/csv';
+import { todayKey } from '../../src/utils/date';
 import { bmiCategory, calcBMI, calcCalorieGoal, calcTDEE, goalLabel } from '../../src/utils/nutrition';
 import { latestWeight } from '../../src/utils/selectors';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { data, updateSettings, resetAll } = useStore();
+  const { data, updateSettings, resetAll, replaceRecords } = useStore();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
   const profile = data.profile;
   if (!profile) return null;
 
@@ -41,6 +49,74 @@ export default function ProfileScreen() {
       { text: '取消', style: 'cancel' },
       { text: '清除', style: 'destructive', onPress: () => { resetAll(); router.replace('/onboarding'); } },
     ]);
+  };
+
+  const contactSupport = () => {
+    Alert.alert(
+      '联系客服',
+      '客服邮箱：kkisie@163.com\n工作时间：周一至周五 9:00 - 18:00\n\n我们会在工作时间内尽快回复你的来信。',
+      [
+        { text: '关闭', style: 'cancel' },
+        { text: '发送邮件', onPress: () => Linking.openURL('mailto:kkisie@163.com?subject=零卡客服') },
+      ],
+    );
+  };
+
+  const exportCsv = async () => {
+    try {
+      setBusy(true);
+      const csv = buildCsv(data);
+      const uri = `${FileSystem.cacheDirectory}零卡数据_${todayKey()}.csv`;
+      // 加 BOM 让 Excel 正确识别 UTF-8 中文
+      await FileSystem.writeAsStringAsync(uri, `\ufeff${csv}`, { encoding: FileSystem.EncodingType.UTF8 });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'text/csv', dialogTitle: '导出零卡记录数据' });
+      } else {
+        Alert.alert('导出完成', `文件已保存到：\n${uri}`);
+      }
+    } catch (e) {
+      Alert.alert('导出失败', '无法生成或分享文件，请稍后重试。');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const importCsv = async () => {
+    try {
+      const picked = await DocumentPicker.getDocumentAsync({
+        type: ['text/csv', 'text/comma-separated-values', 'application/csv', '*/*'],
+        copyToCacheDirectory: true,
+      });
+      if (picked.canceled || !picked.assets?.[0]) return;
+      setBusy(true);
+      const text = await FileSystem.readAsStringAsync(picked.assets[0].uri, { encoding: FileSystem.EncodingType.UTF8 });
+      const records = parseCsv(text.replace(/^\ufeff/, ''));
+      const total =
+        records.weightLogs.length + records.foodLogs.length + records.exerciseLogs.length + records.waterLogs.length;
+      if (total === 0) {
+        Alert.alert('未识别到数据', '该 CSV 文件中没有可导入的记录，请使用本应用导出的文件格式。');
+        return;
+      }
+      Alert.alert(
+        '确认导入',
+        `识别到 ${total} 条记录（体重 ${records.weightLogs.length}、饮食 ${records.foodLogs.length}、运动 ${records.exerciseLogs.length}、饮水 ${records.waterLogs.length}）。\n\n导入将覆盖现有的全部记录，确定继续吗？`,
+        [
+          { text: '取消', style: 'cancel' },
+          {
+            text: '覆盖导入',
+            style: 'destructive',
+            onPress: () => {
+              replaceRecords(records);
+              Alert.alert('导入成功', '记录已更新。');
+            },
+          },
+        ],
+      );
+    } catch (e) {
+      Alert.alert('导入失败', '无法读取或解析所选文件，请确认文件格式正确。');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -91,12 +167,24 @@ export default function ProfileScreen() {
             value={data.settings.reminderEnabled}
             onChange={(v) => updateSettings({ reminderEnabled: v })}
           />
+          <MenuRow
+            icon="color-palette-outline"
+            label="外观主题"
+            value={themeLabel(data.settings.theme)}
+            onPress={() => router.push('/appearance')}
+          />
+        </Group>
+
+        {/* 数据管理 */}
+        <Group title="数据管理">
+          <MenuRow icon="cloud-upload-outline" label="导出数据 (CSV)" onPress={busy ? () => {} : exportCsv} />
+          <MenuRow icon="cloud-download-outline" label="导入数据 (CSV)" onPress={busy ? () => {} : importCsv} />
         </Group>
 
         {/* 帮助与反馈 */}
         <Group title="帮助与反馈">
-          <MenuRow icon="headset-outline" label="联系客服" onPress={() => Linking.openURL('mailto:support@kcalix.app?subject=零卡客服')} />
-          <MenuRow icon="chatbubble-ellipses-outline" label="意见反馈" onPress={() => Linking.openURL('mailto:feedback@kcalix.app?subject=零卡意见反馈')} />
+          <MenuRow icon="headset-outline" label="联系客服" onPress={contactSupport} />
+          <MenuRow icon="chatbubble-ellipses-outline" label="意见反馈" onPress={() => Linking.openURL('mailto:kkisie@163.com?subject=零卡意见反馈')} />
         </Group>
 
         {/* 关于 */}
@@ -122,12 +210,16 @@ export default function ProfileScreen() {
 }
 
 function EditModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { data, updateProfile } = useStore();
+  const { data, updateProfile, addWeight } = useStore();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const p = data.profile!;
+  const curWeight = latestWeight(data.weightLogs) ?? p.weight;
   const [name, setName] = useState(p.name);
   const [gender, setGender] = useState<Gender>(p.gender);
   const [age, setAge] = useState(String(p.age));
   const [height, setHeight] = useState(String(p.height));
+  const [current, setCurrent] = useState(String(curWeight));
   const [target, setTarget] = useState(String(p.targetWeight));
   const [goal, setGoal] = useState<Goal>(p.goal);
   const [activity, setActivity] = useState<ActivityLevel>(p.activity);
@@ -136,7 +228,9 @@ function EditModal({ visible, onClose }: { visible: boolean; onClose: () => void
 
   React.useEffect(() => {
     if (visible) {
+      const cw = latestWeight(data.weightLogs) ?? p.weight;
       setName(p.name); setGender(p.gender); setAge(String(p.age)); setHeight(String(p.height));
+      setCurrent(String(cw));
       setTarget(String(p.targetWeight)); setGoal(p.goal); setActivity(p.activity);
       setCalGoal(p.customCalorieGoal ? String(p.customCalorieGoal) : ''); setWater(String(p.waterGoal));
     }
@@ -154,6 +248,11 @@ function EditModal({ visible, onClose }: { visible: boolean; onClose: () => void
       customCalorieGoal: calGoal ? parseInt(calGoal, 10) : undefined,
       waterGoal: parseInt(water, 10) || p.waterGoal,
     });
+    // 当前体重变化时，记录/覆盖今天的体重
+    const cw = Math.round((parseFloat(current) || curWeight) * 10) / 10;
+    if (cw > 0 && cw !== Math.round(curWeight * 10) / 10) {
+      addWeight({ date: todayKey(), weight: cw });
+    }
     onClose();
   };
 
@@ -178,7 +277,8 @@ function EditModal({ visible, onClose }: { visible: boolean; onClose: () => void
           </Field>
           <Field label="年龄（岁）"><TextInput value={age} onChangeText={setAge} keyboardType="numeric" style={styles.fieldInput} /></Field>
           <Field label="身高（cm）"><TextInput value={height} onChangeText={setHeight} keyboardType="numeric" style={styles.fieldInput} /></Field>
-          <Field label="目标体重（kg）"><TextInput value={target} onChangeText={setTarget} keyboardType="numeric" style={styles.fieldInput} /></Field>
+          <Field label="当前体重（kg，可精确到 0.1）"><TextInput value={current} onChangeText={setCurrent} keyboardType="decimal-pad" style={styles.fieldInput} /></Field>
+          <Field label="目标体重（kg，可精确到 0.1）"><TextInput value={target} onChangeText={setTarget} keyboardType="decimal-pad" style={styles.fieldInput} /></Field>
           <Field label="健康目标">
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               {(['lose', 'keep', 'gain'] as Goal[]).map((g) => (
@@ -200,6 +300,8 @@ function EditModal({ visible, onClose }: { visible: boolean; onClose: () => void
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -209,6 +311,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function StatBox({ label, value, unit, color }: { label: string; value: string; unit: string; color: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.statBox}>
       <Text style={[styles.statValue, { color }]}>{value}</Text>
@@ -219,6 +323,8 @@ function StatBox({ label, value, unit, color }: { label: string; value: string; 
 }
 
 function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={[styles.infoRow, !last && styles.infoRowBorder]}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -228,6 +334,8 @@ function InfoRow({ label, value, last }: { label: string; value: string; last?: 
 }
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={{ marginTop: spacing.xl }}>
       <Text style={styles.groupTitle}>{title}</Text>
@@ -236,17 +344,28 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function MenuRow({ icon, label, onPress }: { icon: any; label: string; onPress: () => void }) {
+function themeLabel(mode: 'light' | 'dark' | 'system' | undefined): string {
+  if (mode === 'dark') return '深色';
+  if (mode === 'system') return '跟随系统';
+  return '浅色';
+}
+
+function MenuRow({ icon, label, onPress, value }: { icon: any; label: string; onPress: () => void; value?: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable style={styles.menuRow} onPress={onPress}>
       <Ionicons name={icon} size={20} color={colors.textSecondary} />
       <Text style={styles.menuLabel}>{label}</Text>
+      {value ? <Text style={styles.menuValue}>{value}</Text> : null}
       <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
     </Pressable>
   );
 }
 
 function ToggleRow({ icon, label, value, onChange }: { icon: any; label: string; value: boolean; onChange: (v: boolean) => void }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.menuRow}>
       <Ionicons name={icon} size={20} color={colors.textSecondary} />
@@ -256,7 +375,8 @@ function ToggleRow({ icon, label, value, onChange }: { icon: any; label: string;
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
   headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text, marginBottom: spacing.lg },
@@ -286,6 +406,7 @@ const styles = StyleSheet.create({
   groupCard: { backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: spacing.lg, ...shadow.soft },
   menuRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
   menuLabel: { flex: 1, fontSize: font.md, color: colors.text },
+  menuValue: { fontSize: font.sm, color: colors.textTertiary },
 
   dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: spacing.xl, paddingVertical: spacing.lg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.danger + '40' },
   dangerText: { color: colors.danger, fontSize: font.md, fontWeight: '700' },
@@ -300,4 +421,4 @@ const styles = StyleSheet.create({
   pill: { flex: 1, height: 44, borderRadius: radius.md, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', ...shadow.soft },
   pillActive: { backgroundColor: colors.primary },
   pillText: { fontSize: font.md, color: colors.textSecondary, fontWeight: '600' },
-});
+  });
