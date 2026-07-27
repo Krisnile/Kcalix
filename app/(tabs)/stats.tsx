@@ -216,7 +216,7 @@ export default function StatsScreen() {
             </Card> : null}
 
             {/* 卡路里收支 */}
-            {dailyBalance.length ? <Card style={[styles.netCard, { backgroundColor: net <= 0 ? colors.primary : colors.warning }]}>
+            {dailyBalance.length ? <Card style={[styles.netCard, { backgroundColor: net <= 0 ? colors.accent : colors.warning }]}>
               <Text style={styles.netLabel}>日均卡路里{net <= 0 ? '缺口' : '盈余'}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
                 <Text style={styles.netValue}>{Math.abs(net)}</Text>
