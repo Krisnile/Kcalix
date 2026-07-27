@@ -8,37 +8,37 @@ import { useStore } from './store/AppStore';
 // 浅色主题
 export const lightColors = {
   // 基础背景与文字
-  bg: '#F3F5F4',
-  card: '#FCFDFC',
-  text: '#18211E',
-  textSecondary: '#65716C',
-  textTertiary: '#98A19D',
-  border: '#E2E7E4',
-  divider: '#EDF0EE',
+  bg: '#F3F8F8',
+  card: '#FFFFFF',
+  text: '#203039',
+  textSecondary: '#647680',
+  textTertiary: '#9AAAB1',
+  border: '#DFEAEB',
+  divider: '#EDF3F3',
 
-  // 品牌色（墨玉绿 + 香槟金）
-  primary: '#176B5B',
-  primaryDark: '#0F5145',
-  primarySoft: '#E3EEEA',
-  accent: '#C69A5B',
-  accentSoft: '#F4EDE2',
+  // 品牌色（冰川薄荷 + 雾蓝紫）
+  primary: '#45B8A2',
+  primaryDark: '#288D7D',
+  primarySoft: '#E3F4F1',
+  accent: '#7B8DE8',
+  accentSoft: '#EEF0FC',
 
-  // 低饱和功能色
-  weight: '#7077A8',
-  weightSoft: '#EBECF4',
-  diet: '#3F786B',
-  dietSoft: '#E5EEEB',
-  water: '#5B8FA3',
-  waterSoft: '#E5EEF1',
-  exercise: '#B57852',
-  exerciseSoft: '#F2E9E3',
-  calorie: '#A86C4A',
-  calorieSoft: '#F2E7E1',
+  // 清透、同明度的功能色
+  weight: '#7B83D5',
+  weightSoft: '#EEF0FB',
+  diet: '#45B8A2',
+  dietSoft: '#E3F4F1',
+  water: '#5EAFD2',
+  waterSoft: '#E7F4F9',
+  exercise: '#F09A68',
+  exerciseSoft: '#FFF0E8',
+  calorie: '#EC8769',
+  calorieSoft: '#FDECE7',
 
   // 状态色
-  success: '#3F786B',
-  warning: '#B88746',
-  danger: '#B85C5C',
+  success: '#45A98F',
+  warning: '#D9A34D',
+  danger: '#D96D74',
 
   white: '#FFFFFF',
   black: '#000000',
@@ -49,34 +49,34 @@ export type Palette = typeof lightColors;
 
 // 深色主题（与浅色保持相同的键）
 export const darkColors: Palette = {
-  bg: '#101512',
-  card: '#18201C',
-  text: '#F0F3F1',
-  textSecondary: '#A3ADA8',
-  textTertiary: '#717D77',
-  border: '#2A342F',
-  divider: '#202A25',
+  bg: '#11191D',
+  card: '#192429',
+  text: '#EFF7F7',
+  textSecondary: '#A6B7BD',
+  textTertiary: '#71858D',
+  border: '#2A3A40',
+  divider: '#202E33',
 
-  primary: '#72AC9D',
-  primaryDark: '#9BC5BA',
-  primarySoft: '#233B34',
-  accent: '#D2AE77',
-  accentSoft: '#3B3225',
+  primary: '#62CDB8',
+  primaryDark: '#8BDCCB',
+  primarySoft: '#213D3A',
+  accent: '#9CA8F2',
+  accentSoft: '#2C304B',
 
-  weight: '#9298BF',
-  weightSoft: '#2D3043',
-  diet: '#72AC9D',
-  dietSoft: '#233B34',
-  water: '#7AA4B4',
-  waterSoft: '#22343B',
-  exercise: '#C79473',
-  exerciseSoft: '#3B2E27',
-  calorie: '#C38868',
-  calorieSoft: '#3C2B24',
+  weight: '#9CA3EB',
+  weightSoft: '#2C304B',
+  diet: '#62CDB8',
+  dietSoft: '#213D3A',
+  water: '#79C2E0',
+  waterSoft: '#203944',
+  exercise: '#F4AD83',
+  exerciseSoft: '#412F27',
+  calorie: '#F09A80',
+  calorieSoft: '#432D29',
 
-  success: '#72AC9D',
-  warning: '#D2AE77',
-  danger: '#D77B7B',
+  success: '#62CDB8',
+  warning: '#E1B35F',
+  danger: '#EB8990',
 
   white: '#FFFFFF',
   black: '#000000',
@@ -108,10 +108,10 @@ export function useIsDark(): boolean {
 
 // 餐次配色（早/午/晚/加餐）— 两种主题通用
 export const mealColors: Record<string, { color: string; soft: string }> = {
-  breakfast: { color: '#B88746', soft: '#F4EDE2' },
-  lunch: { color: '#3F786B', soft: '#E5EEEB' },
-  dinner: { color: '#7077A8', soft: '#EBECF4' },
-  snack: { color: '#9B7185', soft: '#F1E8ED' },
+  breakfast: { color: '#D9A34D', soft: '#FFF5DF' },
+  lunch: { color: '#45B8A2', soft: '#E3F4F1' },
+  dinner: { color: '#7B83D5', soft: '#EEF0FB' },
+  snack: { color: '#D787B5', soft: '#FBEAF4' },
 };
 
 export const spacing = {
