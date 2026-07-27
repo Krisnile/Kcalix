@@ -167,11 +167,15 @@ export default function ProfileScreen() {
         {/* 个人资料卡 */}
         <View style={styles.profileCard}>
           <Pressable onPress={changeAvatar} style={styles.avatarWrap}>
-            <Image
-              source={profile.avatarUri ? { uri: profile.avatarUri } : profile.gender === 'male' ? images.avatarMale : images.avatarFemale}
-              style={styles.avatar}
-              resizeMode="cover"
-            />
+            <View style={styles.avatarFrame}>
+              <View style={styles.avatarInner}>
+                <Image
+                  source={profile.avatarUri ? { uri: profile.avatarUri } : profile.gender === 'male' ? images.avatarMale : images.avatarFemale}
+                  style={styles.avatar}
+                  resizeMode="cover"
+                />
+              </View>
+            </View>
             <View style={styles.avatarBadge}>
               <Ionicons name="camera" size={12} color="#fff" />
             </View>
@@ -476,9 +480,11 @@ const makeStyles = (colors: Palette) =>
   safe: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
   profileCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, ...shadow.card },
-  avatarWrap: { width: 60, height: 60 },
-  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primarySoft },
-  avatarBadge: { position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: 11, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.card },
+  avatarWrap: { width: 70, height: 70, alignItems: 'center', justifyContent: 'center' },
+  avatarFrame: { width: 68, height: 68, borderRadius: 34, borderWidth: 1, borderColor: colors.primary + '70', backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', ...shadow.soft },
+  avatarInner: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: colors.card, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primarySoft },
+  avatarBadge: { position: 'absolute', right: 0, bottom: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.card },
   name: { fontSize: font.lg, fontWeight: '800', color: colors.text },
   sub: { fontSize: font.sm, color: colors.textSecondary, marginTop: 2 },
   bmiTag: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill, marginTop: 6 },
