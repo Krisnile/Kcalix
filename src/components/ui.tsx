@@ -37,7 +37,13 @@ export function Card({
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <View style={[styles.card, padded && { padding: spacing.lg }, style]}>{children}</View>
+    <View style={[styles.card, padded && { padding: spacing.lg }, style]}>
+      <View style={styles.cardCorner}>
+        <View style={styles.cardCornerLong} />
+        <View style={styles.cardCornerShort} />
+      </View>
+      {children}
+    </View>
   );
 }
 
@@ -47,7 +53,10 @@ export function SectionTitle({ title, action }: { title: string; action?: React.
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.sectionRow}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionLead}>
+        <View style={styles.sectionTick} />
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
       {action}
     </View>
   );
@@ -118,6 +127,7 @@ export function Button({
         style,
       ]}
     >
+      {isPrimary && !disabled ? <View style={styles.buttonHighlight} /> : null}
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : (
@@ -151,6 +161,7 @@ export function Segmented<T extends string>({
         return (
           <Pressable key={opt.value} style={styles.segItem} onPress={() => onChange(opt.value)}>
             <View style={[styles.segPill, active && styles.segPillActive]}>
+              {active ? <View style={styles.segStatusDot} /> : null}
               <Text style={[styles.segText, active && styles.segTextActive]}>{opt.label}</Text>
             </View>
           </Pressable>
@@ -177,7 +188,10 @@ export function Empty({ icon = '🗒️', title, subtitle }: { icon?: string; ti
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.empty}>
-      <Text style={{ fontSize: 40 }}>{icon}</Text>
+      <View style={styles.emptyIconHalo}>
+        <View style={styles.emptyOrbitDot} />
+        <Text style={styles.emptyIcon}>{icon}</Text>
+      </View>
       <Text style={styles.emptyTitle}>{title}</Text>
       {subtitle ? <Text style={styles.emptySub}>{subtitle}</Text> : null}
     </View>
@@ -210,18 +224,24 @@ export function Txt({
 const makeStyles = (colors: Palette) =>
   StyleSheet.create({
     card: {
+      position: 'relative',
       backgroundColor: colors.card,
       borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: colors.border,
       ...shadow.card,
     },
+    cardCorner: { position: 'absolute', top: 9, right: 10, alignItems: 'flex-end', gap: 3, opacity: 0.65 },
+    cardCornerLong: { width: 18, height: 1, borderRadius: 1, backgroundColor: colors.border },
+    cardCornerShort: { width: 9, height: 1, borderRadius: 1, backgroundColor: colors.accent },
     sectionRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: spacing.md,
     },
+    sectionLead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    sectionTick: { width: 12, height: 2, borderRadius: 1, backgroundColor: colors.accent },
     sectionTitle: { fontSize: font.lg, fontWeight: '700', color: colors.text },
     pageTitleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
     pageTitleLead: { flex: 1, flexDirection: 'row', alignItems: 'stretch', paddingRight: spacing.md },
@@ -245,12 +265,14 @@ const makeStyles = (colors: Palette) =>
     pageTitleTraceLine: { height: 1, borderRadius: radius.pill, backgroundColor: colors.border },
     pageTitleTraceDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.accent },
     button: {
+      overflow: 'hidden',
       height: 52,
       borderRadius: radius.md,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: spacing.lg,
     },
+    buttonHighlight: { position: 'absolute', top: 0, left: spacing.xl, right: spacing.xl, height: 1, backgroundColor: 'rgba(255,255,255,0.42)' },
     buttonInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     buttonText: { fontSize: font.md, fontWeight: '700' },
     segmented: {
@@ -263,17 +285,22 @@ const makeStyles = (colors: Palette) =>
     },
     segItem: { flex: 1 },
     segPill: {
+      position: 'relative',
       height: 38,
       borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
     },
     segPillActive: { backgroundColor: colors.primarySoft },
+    segStatusDot: { position: 'absolute', top: 5, width: 3, height: 3, borderRadius: 2, backgroundColor: colors.accent },
     segText: { fontSize: font.sm, color: colors.textSecondary, fontWeight: '600' },
     segTextActive: { color: colors.primaryDark, fontWeight: '700' },
     tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
     tagText: { fontSize: font.xs, fontWeight: '700' },
     empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, gap: 6 },
+    emptyIconHalo: { width: 68, height: 68, borderRadius: 34, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+    emptyOrbitDot: { position: 'absolute', right: 2, top: 13, width: 7, height: 7, borderRadius: 4, backgroundColor: colors.accent },
+    emptyIcon: { fontSize: 34 },
     emptyTitle: { fontSize: font.md, fontWeight: '700', color: colors.text, marginTop: 6 },
     emptySub: { fontSize: font.sm, color: colors.textTertiary, textAlign: 'center' },
     row: { flexDirection: 'row', alignItems: 'center' },
