@@ -52,7 +52,6 @@ function CustomTabBar({ state, navigation }: any) {
             <Pressable key={tab.name} style={styles.centerWrap} onPress={onPress}>
               <View style={styles.centerBtn}>
                 <Ionicons name="add" size={32} color="#fff" />
-                <View style={styles.centerSpark} />
               </View>
               <Text style={styles.centerLabel}>{tab.label}</Text>
             </Pressable>
@@ -67,7 +66,6 @@ function CustomTabBar({ state, navigation }: any) {
                 size={21}
                 color={focused ? colors.primaryDark : colors.textTertiary}
               />
-              {focused ? <View style={styles.tabStatusDot} /> : null}
             </View>
             <Text style={[styles.label, focused && { color: colors.primary, fontWeight: '700' }]}>{tab.label}</Text>
           </Pressable>
@@ -89,7 +87,6 @@ const makeStyles = (colors: Palette) =>
     item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 },
     iconWrap: { position: 'relative', width: 38, height: 28, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
     iconWrapActive: { backgroundColor: colors.primarySoft },
-    tabStatusDot: { position: 'absolute', right: 4, top: 4, width: 4, height: 4, borderRadius: 2, backgroundColor: colors.accent },
     label: { fontSize: font.xs, color: colors.textTertiary },
     centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: 2 },
     centerBtn: {
@@ -105,6 +102,5 @@ const makeStyles = (colors: Palette) =>
       borderColor: colors.card,
       ...shadow.float,
     },
-    centerSpark: { position: 'absolute', right: 5, top: 5, width: 5, height: 5, borderRadius: 3, backgroundColor: colors.accent },
     centerLabel: { fontSize: font.xs, color: colors.textSecondary, fontWeight: '600' },
   });
