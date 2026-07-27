@@ -49,38 +49,38 @@ export type Palette = typeof lightColors;
 
 // 深色主题（与浅色保持相同的键）
 export const darkColors: Palette = {
-  bg: '#0B1324',
-  card: '#142541',
-  text: '#F5FAFF',
-  textSecondary: '#B4C8DC',
-  textTertiary: '#819BB3',
-  border: '#2D4B78',
-  divider: '#1D3456',
+  bg: '#0C1624',
+  card: '#15263A',
+  text: '#EFF6FA',
+  textSecondary: '#A9BDCA',
+  textTertiary: '#748C9C',
+  border: '#29415C',
+  divider: '#1E3045',
 
-  primary: '#43E0C0',
-  primaryDark: '#7AF0D6',
-  primarySoft: '#193B62',
-  accent: '#8EA8FF',
-  accentSoft: '#2A3D78',
+  primary: '#55D3BC',
+  primaryDark: '#82E1D0',
+  primarySoft: '#1B354C',
+  accent: '#929FF0',
+  accentSoft: '#2A355C',
 
-  weight: '#AAB5FF',
-  weightSoft: '#303D78',
-  diet: '#4BE0BF',
-  dietSoft: '#193B62',
-  water: '#68D4FF',
-  waterSoft: '#193F69',
-  exercise: '#FFAD7A',
-  exerciseSoft: '#4B315C',
-  calorie: '#FF9182',
-  calorieSoft: '#50304F',
+  weight: '#A2AAED',
+  weightSoft: '#2C365F',
+  diet: '#55D3BC',
+  dietSoft: '#1B354C',
+  water: '#6DC7E8',
+  waterSoft: '#1D3A50',
+  exercise: '#F2A37A',
+  exerciseSoft: '#43333E',
+  calorie: '#F08D7C',
+  calorieSoft: '#452F3D',
 
-  success: '#58E0B6',
-  warning: '#FFD166',
-  danger: '#FF8294',
+  success: '#64D4B4',
+  warning: '#EFC263',
+  danger: '#EF8994',
 
   white: '#FFFFFF',
   black: '#000000',
-  shadow: '#030817',
+  shadow: '#050B12',
 };
 
 // 默认（浅色）色板：用于阴影定义、引导页等静态场景
@@ -110,10 +110,10 @@ export function useIsDark(): boolean {
 export function getMealColors(palette: Palette): Record<string, { color: string; soft: string }> {
   const dark = palette === darkColors;
   return {
-    breakfast: { color: palette.warning, soft: dark ? '#3D385F' : '#FFF5DF' },
+    breakfast: { color: palette.warning, soft: dark ? '#39364F' : '#FFF5DF' },
     lunch: { color: palette.diet, soft: palette.dietSoft },
     dinner: { color: palette.weight, soft: palette.weightSoft },
-    snack: { color: dark ? '#F0A5D6' : '#D787B5', soft: dark ? '#472F63' : '#FBEAF4' },
+    snack: { color: dark ? '#DFA0C7' : '#D787B5', soft: dark ? '#3D304B' : '#FBEAF4' },
   };
 }
 
