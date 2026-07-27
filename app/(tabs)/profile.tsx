@@ -19,7 +19,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from '../../src/components/ui';
+import { Button, PageTitle } from '../../src/components/ui';
 import { images } from '../../src/images';
 import { useStore } from '../../src/store/AppStore';
 import { font, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
@@ -35,6 +35,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [editing, setEditing] = useState(false);
+  const [supportVisible, setSupportVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const profile = data.profile;
   if (!profile) return null;
@@ -84,16 +85,7 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const contactSupport = () => {
-    Alert.alert(
-      '联系客服',
-      '客服邮箱：kkisie@163.com\n工作时间：周一至周五 9:00 - 18:00\n\n我们会在工作时间内尽快回复你的来信。',
-      [
-        { text: '关闭', style: 'cancel' },
-        { text: '发送邮件', onPress: () => Linking.openURL('mailto:kkisie@163.com?subject=零卡客服') },
-      ],
-    );
-  };
+  const contactSupport = () => setSupportVisible(true);
 
   const exportCsv = async () => {
     try {
@@ -168,7 +160,9 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.headerTitle}>我的</Text>
+        <View style={{ marginBottom: spacing.lg }}>
+          <PageTitle eyebrow="个人中心" title="我的" subtitle="目标、偏好与数据管理" />
+        </View>
 
         {/* 个人资料卡 */}
         <View style={styles.profileCard}>
@@ -256,7 +250,54 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <EditModal visible={editing} onClose={() => setEditing(false)} />
+      <ContactSupportModal visible={supportVisible} onClose={() => setSupportVisible(false)} />
     </SafeAreaView>
+  );
+}
+
+function ContactSupportModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const sendEmail = () => {
+    onClose();
+    Linking.openURL('mailto:kkisie@163.com?subject=零卡客服');
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={styles.supportBackdrop} onPress={onClose}>
+        <Pressable style={styles.supportCard} onPress={() => {}}>
+          <View style={styles.supportIcon}>
+            <Ionicons name="headset-outline" size={27} color={colors.primaryDark} />
+          </View>
+          <Text style={styles.supportTitle}>联系客服</Text>
+          <Text style={styles.supportIntro}>遇到问题或有建议，都可以来找我们。</Text>
+          <View style={styles.supportInfo}>
+            <View style={styles.supportInfoRow}>
+              <Ionicons name="mail-outline" size={18} color={colors.primary} />
+              <View>
+                <Text style={styles.supportInfoLabel}>客服邮箱</Text>
+                <Text style={styles.supportInfoValue}>kkisie@163.com</Text>
+              </View>
+            </View>
+            <View style={styles.supportInfoRow}>
+              <Ionicons name="time-outline" size={18} color={colors.primary} />
+              <View>
+                <Text style={styles.supportInfoLabel}>工作时间</Text>
+                <Text style={styles.supportInfoValue}>周一至周五 9:00–18:00</Text>
+              </View>
+            </View>
+          </View>
+          <Pressable style={styles.supportPrimary} onPress={sendEmail}>
+            <Ionicons name="paper-plane-outline" size={18} color="#fff" />
+            <Text style={styles.supportPrimaryText}>发送邮件</Text>
+          </Pressable>
+          <Pressable style={styles.supportClose} onPress={onClose}>
+            <Text style={styles.supportCloseText}>暂时不用</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 }
 
@@ -430,8 +471,6 @@ const makeStyles = (colors: Palette) =>
   StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
-  headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text, marginBottom: spacing.lg },
-
   profileCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, ...shadow.card },
   avatarWrap: { width: 60, height: 60 },
   avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primarySoft },
@@ -465,12 +504,26 @@ const makeStyles = (colors: Palette) =>
   dangerText: { color: colors.danger, fontSize: font.md, fontWeight: '700' },
   version: { textAlign: 'center', color: colors.textTertiary, fontSize: font.xs, marginTop: spacing.lg },
 
+  supportBackdrop: { flex: 1, backgroundColor: 'rgba(15,23,42,0.42)', alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  supportCard: { width: '100%', maxWidth: 380, backgroundColor: colors.card, borderRadius: radius.xl, padding: spacing.xl, alignItems: 'center', ...shadow.float },
+  supportIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
+  supportTitle: { fontSize: font.xl, fontWeight: '800', color: colors.text },
+  supportIntro: { fontSize: font.sm, color: colors.textSecondary, marginTop: 5, textAlign: 'center' },
+  supportInfo: { width: '100%', backgroundColor: colors.bg, borderRadius: radius.md, padding: spacing.md, gap: spacing.md, marginTop: spacing.lg },
+  supportInfoRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  supportInfoLabel: { fontSize: font.xs, color: colors.textTertiary },
+  supportInfoValue: { fontSize: font.md, color: colors.text, fontWeight: '600', marginTop: 2 },
+  supportPrimary: { width: '100%', height: 48, borderRadius: radius.md, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: spacing.lg },
+  supportPrimaryText: { color: '#fff', fontSize: font.md, fontWeight: '700' },
+  supportClose: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
+  supportCloseText: { color: colors.textSecondary, fontSize: font.sm, fontWeight: '600' },
+
   modalHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingVertical: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
   modalTitle: { fontSize: font.lg, fontWeight: '700', color: colors.text },
   modalCancel: { fontSize: font.md, color: colors.textSecondary },
   modalSave: { fontSize: font.md, color: colors.primary, fontWeight: '700' },
   fieldLabel: { fontSize: font.sm, color: colors.textSecondary, marginBottom: spacing.sm, fontWeight: '600' },
-  fieldInput: { backgroundColor: colors.card, borderRadius: radius.md, paddingHorizontal: spacing.lg, height: 50, fontSize: font.md, color: colors.text, ...shadow.soft },
+  fieldInput: { backgroundColor: colors.card, borderRadius: radius.md, paddingHorizontal: spacing.lg, height: 50, fontSize: font.md, color: colors.text, outlineStyle: 'none', ...shadow.soft } as any,
   pill: { flex: 1, height: 44, borderRadius: radius.md, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', ...shadow.soft },
   pillActive: { backgroundColor: colors.primary },
   pillText: { fontSize: font.md, color: colors.textSecondary, fontWeight: '600' },

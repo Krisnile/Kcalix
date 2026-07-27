@@ -15,10 +15,8 @@
       "package": "com.kcalix.app",
       "versionCode": 2,
       "adaptiveIcon": {
-        "backgroundColor": "#E4F8F2",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#13B995",
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -43,7 +41,8 @@
         {
           "photosPermission": "零卡需要访问你的相册，以便你选择自定义头像。"
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": false

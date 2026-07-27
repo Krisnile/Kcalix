@@ -251,6 +251,143 @@ export function LineChart({
 }
 
 /* ============================================================
+ * 双线对比图（摄入 vs 支出，触摸查看同日详情）
+ * ========================================================== */
+interface ComparisonPoint {
+  label: string;
+  primary: number;
+  secondary: number;
+}
+
+export function ComparisonLineChart({
+  data,
+  width,
+  height = 220,
+  primaryColor,
+  secondaryColor,
+  primaryLabel,
+  secondaryLabel,
+  unit = '',
+}: {
+  data: ComparisonPoint[];
+  width: number;
+  height?: number;
+  primaryColor: string;
+  secondaryColor: string;
+  primaryLabel: string;
+  secondaryLabel: string;
+  unit?: string;
+}) {
+  const c = useColors();
+  const [active, setActive] = useState<number | null>(data.length ? data.length - 1 : null);
+  const padL = 38;
+  const padR = 14;
+  const padT = 54;
+  const padB = 28;
+  const innerW = width - padL - padR;
+  const innerH = height - padT - padB;
+  const maxValue = Math.max(1, ...data.flatMap((point) => [point.primary, point.secondary]));
+  const max = maxValue * 1.14;
+  const xFor = (index: number) => padL + (data.length <= 1 ? innerW / 2 : (innerW * index) / (data.length - 1));
+  const yFor = (value: number) => padT + innerH - (value / max) * innerH;
+  const primaryPoints = data.map((point, index) => ({ x: xFor(index), y: yFor(point.primary) }));
+  const secondaryPoints = data.map((point, index) => ({ x: xFor(index), y: yFor(point.secondary) }));
+  const ticks = [max, max / 2, 0];
+
+  const handleTouch = (event: GestureResponderEvent) => {
+    if (!data.length) return;
+    const x = event.nativeEvent.locationX;
+    let nearest = 0;
+    let distance = Infinity;
+    data.forEach((_, index) => {
+      const nextDistance = Math.abs(xFor(index) - x);
+      if (nextDistance < distance) {
+        nearest = index;
+        distance = nextDistance;
+      }
+    });
+    setActive(nearest);
+  };
+
+  if (!data.length) return <View style={{ height }} />;
+  const activePoint = active != null ? data[active] : null;
+  const activeX = active != null ? xFor(active) : 0;
+  const tipW = 156;
+  const tipX = Math.max(padL, Math.min(width - padR - tipW, activeX - tipW / 2));
+
+  return (
+    <View
+      onStartShouldSetResponder={() => true}
+      onMoveShouldSetResponder={() => true}
+      onResponderGrant={handleTouch}
+      onResponderMove={handleTouch}
+    >
+      <Svg width={width} height={height}>
+        <Defs>
+          <LinearGradient id="comparisonArea" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={primaryColor} stopOpacity={0.18} />
+            <Stop offset="1" stopColor={primaryColor} stopOpacity={0.01} />
+          </LinearGradient>
+        </Defs>
+
+        {ticks.map((tick, index) => {
+          const y = yFor(tick);
+          return (
+            <G key={`grid-${index}`}>
+              <Line x1={padL} y1={y} x2={width - padR} y2={y} stroke={c.divider} strokeWidth={1} />
+              <SvgText x={4} y={y + 4} fontSize={10} fill={c.textTertiary}>
+                {Math.round(tick)}
+              </SvgText>
+            </G>
+          );
+        })}
+
+        {primaryPoints.length > 1 ? (
+          <>
+            <Path
+              d={`${smoothPath(primaryPoints)} L${primaryPoints[primaryPoints.length - 1].x},${padT + innerH} L${primaryPoints[0].x},${padT + innerH} Z`}
+              fill="url(#comparisonArea)"
+            />
+            <Path d={smoothPath(primaryPoints)} stroke={primaryColor} strokeWidth={3} fill="none" strokeLinecap="round" />
+            <Path d={smoothPath(secondaryPoints)} stroke={secondaryColor} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeDasharray="7 5" />
+          </>
+        ) : null}
+
+        {data.map((point, index) => (
+          <G key={`point-${index}`}>
+            <Circle cx={xFor(index)} cy={yFor(point.primary)} r={active === index ? 5 : 3} fill={c.card} stroke={primaryColor} strokeWidth={2} />
+            <Circle cx={xFor(index)} cy={yFor(point.secondary)} r={active === index ? 5 : 3} fill={c.card} stroke={secondaryColor} strokeWidth={2} />
+            {(index % Math.ceil(data.length / 6 || 1) === 0 || index === data.length - 1) ? (
+              <SvgText x={xFor(index)} y={height - 7} fontSize={10} fill={active === index ? c.text : c.textTertiary} textAnchor="middle">
+                {point.label}
+              </SvgText>
+            ) : null}
+          </G>
+        ))}
+
+        {activePoint ? (
+          <G>
+            <Line x1={activeX} y1={padT} x2={activeX} y2={padT + innerH} stroke={c.textTertiary} strokeWidth={1} strokeDasharray="3 4" />
+            <Rect x={tipX} y={2} width={tipW} height={45} rx={10} fill="#0F172A" opacity={0.94} />
+            <SvgText x={tipX + 10} y={17} fontSize={9} fill="rgba(255,255,255,0.68)">
+              {activePoint.label}
+            </SvgText>
+            <Circle cx={tipX + 12} cy={32} r={4} fill={primaryColor} />
+            <SvgText x={tipX + 20} y={36} fontSize={10} fill="#fff">
+              {primaryLabel} {activePoint.primary}{unit}
+            </SvgText>
+            <Circle cx={tipX + 91} cy={32} r={4} fill={secondaryColor} />
+            <SvgText x={tipX + 99} y={36} fontSize={10} fill="#fff">
+              {secondaryLabel} {activePoint.secondary}{unit}
+            </SvgText>
+          </G>
+        ) : null}
+      </Svg>
+    </View>
+  );
+}
+
+/* ============================================================
  * 柱状图（圆角柱 + 目标线 + 触摸高亮数值）
  * ========================================================== */
 interface Bar {
@@ -347,9 +484,11 @@ export function BarChart({
                   {unit}
                 </SvgText>
               ) : null}
-              <SvgText x={x} y={height - 8} fontSize={10} fill={isActive ? c.text : c.textTertiary} textAnchor="middle">
-                {d.label}
-              </SvgText>
+              {(i % Math.ceil(data.length / 7 || 1) === 0 || i === data.length - 1) ? (
+                <SvgText x={x} y={height - 8} fontSize={10} fill={isActive ? c.text : c.textTertiary} textAnchor="middle">
+                  {d.label}
+                </SvgText>
+              ) : null}
             </G>
           );
         })}

@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LineChart } from '../../src/components/charts';
-import { Card, Empty, Segmented } from '../../src/components/ui';
+import { BarChart, ComparisonLineChart, LineChart } from '../../src/components/charts';
+import { Card, Empty, PageTitle, Segmented } from '../../src/components/ui';
 import { useStore } from '../../src/store/AppStore';
 import { font, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
 import { ExerciseLog, FoodLog } from '../../src/types';
@@ -88,6 +88,7 @@ export default function StatsScreen() {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [period, setPeriod] = useState<'week' | 'month'>('week');
+  const [chartView, setChartView] = useState<'calorie' | 'water' | 'weight'>('calorie');
   const days = period === 'week' ? 7 : 30;
   const profile = data.profile;
   const currentWeight = latestWeight(data.weightLogs) ?? undefined;
@@ -132,11 +133,20 @@ export default function StatsScreen() {
   }, [allTimeBalance, data.exerciseLogs, dailyGoal]);
 
   const activeDays = dailyBalance.length || 1;
+  const firstAnyRecord = useMemo(() => {
+    const dates = [
+      ...data.foodLogs.map((item) => item.date),
+      ...data.exerciseLogs.map((item) => item.date),
+      ...data.waterLogs.map((item) => item.date),
+      ...data.weightLogs.map((item) => item.date),
+    ].sort();
+    return dates[0] ?? null;
+  }, [data.exerciseLogs, data.foodLogs, data.waterLogs, data.weightLogs]);
+  const calendarDays = keys.filter((key) => !firstAnyRecord || key >= firstAnyRecord).length || 1;
   const avgIntake = Math.round(dailyBalance.reduce((s, d) => s + d.intake, 0) / activeDays);
   const avgBurned = Math.round(dailyBalance.reduce((s, d) => s + d.exercise, 0) / activeDays);
   const avgWater = Math.round(
-    keys.filter((k) => recordFrom && k >= recordFrom).reduce((s, k) => s + sumWater(data.waterLogs, k), 0) /
-      activeDays,
+    keys.reduce((s, k) => s + sumWater(data.waterLogs, k), 0) / calendarDays,
   );
   const net = Math.round(dailyBalance.reduce((s, d) => s + d.net, 0) / activeDays);
 
@@ -145,12 +155,28 @@ export default function StatsScreen() {
     [dailyBalance],
   );
 
-  const hasData = dailyBalance.length > 0;
+  const comparisonPoints = useMemo(
+    () => dailyBalance.map((day) => ({ label: shortLabel(day.date), primary: day.intake, secondary: day.expenditure })),
+    [dailyBalance],
+  );
+  const waterBars = useMemo(
+    () => keys.map((key) => ({ label: shortLabel(key), value: sumWater(data.waterLogs, key), highlight: key === keys[keys.length - 1] })),
+    [data.waterLogs, keys],
+  );
+  const weightPoints = useMemo(
+    () => data.weightLogs
+      .filter((item) => item.date >= keys[0] && item.date <= keys[keys.length - 1])
+      .map((item) => ({ label: shortLabel(item.date), value: item.weight })),
+    [data.weightLogs, keys],
+  );
+  const waterHasData = waterBars.some((item) => item.value > 0);
+  const hasData = dailyBalance.length > 0 || waterHasData || weightPoints.length > 0;
+  const goalDays = dailyBalance.filter((day) => day.intake > 0 && day.intake <= dailyGoal).length;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>统计</Text>
+        <PageTitle eyebrow="数据洞察" title="统计" subtitle="把记录连起来，看见身体的节奏" />
         <Segmented
           style={{ marginTop: spacing.md }}
           value={period}
@@ -170,7 +196,7 @@ export default function StatsScreen() {
         ) : (
           <View style={{ gap: spacing.lg }}>
             {/* 累计收支（至今） */}
-            <Card style={styles.cumCard}>
+            {dailyBalance.length ? <Card style={styles.cumCard}>
               <Text style={styles.cumTitle}>累计收支（至今）</Text>
               <View style={styles.cumRow}>
                 <CumMetric label="累计摄入" value={allTimeTotals.intake} unit="kcal" color={colors.diet} />
@@ -187,10 +213,10 @@ export default function StatsScreen() {
                   {allTimeTotals.net} kcal（{allTimeTotals.net <= 0 ? '缺口' : '盈余'}）
                 </Text>
               </View>
-            </Card>
+            </Card> : null}
 
             {/* 卡路里收支 */}
-            <Card style={[styles.netCard, { backgroundColor: net <= 0 ? colors.primary : colors.warning }]}>
+            {dailyBalance.length ? <Card style={[styles.netCard, { backgroundColor: net <= 0 ? colors.primary : colors.warning }]}>
               <Text style={styles.netLabel}>日均卡路里{net <= 0 ? '缺口' : '盈余'}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
                 <Text style={styles.netValue}>{Math.abs(net)}</Text>
@@ -199,7 +225,7 @@ export default function StatsScreen() {
               <Text style={styles.netHint}>
                 {net <= 0 ? '保持热量缺口，有助于减脂 💪' : '摄入高于消耗，注意控制哦'}
               </Text>
-            </Card>
+            </Card> : null}
 
             {/* 三项日均 */}
             <View style={styles.statsRow}>
@@ -208,8 +234,85 @@ export default function StatsScreen() {
               <StatBox icon="water-outline" color={colors.water} label="日均饮水" value={avgWater} unit="ml" />
             </View>
 
+            <Card style={styles.insightCard}>
+              <View style={styles.insightIcon}>
+                <Ionicons name="sparkles" size={20} color={colors.primaryDark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.insightEyebrow}>{period === 'week' ? '本周节奏' : '本月节奏'}</Text>
+                <Text style={styles.insightText}>
+                  {dailyBalance.length
+                    ? `${goalDays} 天摄入未超过目标，${dailyBalance.length - goalDays} 天需要留意。`
+                    : waterHasData
+                      ? `日均饮水 ${avgWater} ml，继续保持记录。`
+                      : '继续记录，趋势会越来越清晰。'}
+                </Text>
+              </View>
+            </Card>
+
+            <Card>
+              <View style={styles.chartHeading}>
+                <View>
+                  <Text style={styles.cardTitle}>趋势实验室</Text>
+                  <Text style={styles.chartSubtitle}>在图表上滑动，查看每天的具体数值</Text>
+                </View>
+                <Ionicons name="analytics-outline" size={24} color={colors.primary} />
+              </View>
+              <Segmented
+                style={{ marginTop: spacing.md, marginBottom: spacing.sm }}
+                value={chartView}
+                onChange={setChartView}
+                options={[
+                  { value: 'calorie', label: '摄入 / 支出' },
+                  { value: 'water', label: '饮水' },
+                  { value: 'weight', label: '体重' },
+                ]}
+              />
+              {chartView === 'calorie' ? (
+                comparisonPoints.length < 2 ? (
+                  <Empty icon="📈" title="记录更多天数后显示对比" subtitle="至少需要 2 天饮食或运动记录" />
+                ) : (
+                  <>
+                    <View style={styles.legendRow}>
+                      <ChartLegend color={colors.diet} label="摄入" />
+                      <ChartLegend color={colors.exercise} label="支出" dashed />
+                    </View>
+                    <ComparisonLineChart
+                      data={comparisonPoints}
+                      width={W - spacing.xl * 2 - spacing.lg * 2}
+                      primaryColor={colors.diet}
+                      secondaryColor={colors.exercise}
+                      primaryLabel="摄入"
+                      secondaryLabel="支出"
+                    />
+                  </>
+                )
+              ) : chartView === 'water' ? (
+                waterHasData ? (
+                  <>
+                    <Text style={styles.goalLineHint}>虚线为每日目标 {profile?.waterGoal ?? 2000} ml</Text>
+                    <BarChart
+                      data={waterBars}
+                      width={W - spacing.xl * 2 - spacing.lg * 2}
+                      color={colors.water}
+                      goal={profile?.waterGoal ?? 2000}
+                      goalColor={colors.water}
+                      unit=" ml"
+                    />
+                  </>
+                ) : <Empty icon="💧" title="还没有饮水趋势" subtitle="记录饮水后，这里会对照每日目标" />
+              ) : weightPoints.length >= 2 ? (
+                <LineChart
+                  data={weightPoints}
+                  width={W - spacing.xl * 2 - spacing.lg * 2}
+                  color={colors.weight}
+                  unit=" kg"
+                />
+              ) : <Empty icon="⚖️" title="还没有体重趋势" subtitle="至少记录 2 次体重后显示变化" />}
+            </Card>
+
             {/* 每日热量收支时间轴 */}
-            <Card padded={false}>
+            {dailyBalance.length ? <Card padded={false}>
               <View style={[styles.cardTitleRow, { paddingHorizontal: spacing.lg, paddingTop: spacing.lg }]}>
                 <Text style={styles.cardTitle}>热量收支时间轴</Text>
                 <Text style={styles.cardHint}>仅显示有记录 · 每日 {dailyGoal} kcal</Text>
@@ -241,10 +344,10 @@ export default function StatsScreen() {
                   </Text>
                 </View>
               </View>
-            </Card>
+            </Card> : null}
 
             {/* 热量收支趋势 */}
-            <Card>
+            {dailyBalance.length ? <Card>
               <View style={styles.cardTitleRow}>
                 <Text style={styles.cardTitle}>热量收支趋势</Text>
                 <Text style={styles.cardHint}>负值为缺口 · 正值为盈余</Text>
@@ -259,12 +362,23 @@ export default function StatsScreen() {
                   unit=" kcal"
                 />
               )}
-            </Card>
+            </Card> : null}
           </View>
         )}
         <View style={{ height: 24 }} />
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function ChartLegend({ color, label, dashed }: { color: string; label: string; dashed?: boolean }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  return (
+    <View style={styles.legendItem}>
+      <View style={[styles.legendLine, { backgroundColor: color, opacity: dashed ? 0.72 : 1 }]} />
+      <Text style={styles.legendText}>{label}{dashed ? '（虚线）' : ''}</Text>
+    </View>
   );
 }
 
@@ -341,7 +455,6 @@ const makeStyles = (colors: Palette) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg },
     header: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.md },
-    headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text },
     scroll: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
 
     cumCard: { ...shadow.soft },
@@ -368,10 +481,21 @@ const makeStyles = (colors: Palette) =>
     statValue: { fontSize: font.xl, fontWeight: '800' },
     statUnit: { fontSize: 10, color: colors.textTertiary },
     statLabel: { fontSize: font.xs, color: colors.textSecondary, marginTop: 2 },
+    insightCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: colors.primarySoft },
+    insightIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+    insightEyebrow: { fontSize: font.xs, color: colors.primaryDark, fontWeight: '800', letterSpacing: 0.5 },
+    insightText: { fontSize: font.md, color: colors.text, fontWeight: '600', marginTop: 3, lineHeight: 21 },
 
     cardTitle: { fontSize: font.lg, fontWeight: '700', color: colors.text },
     cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
     cardHint: { fontSize: font.sm, color: colors.textTertiary },
+    chartHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    chartSubtitle: { fontSize: font.xs, color: colors.textTertiary, marginTop: 3 },
+    legendRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.sm },
+    legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    legendLine: { width: 18, height: 3, borderRadius: 2 },
+    legendText: { fontSize: font.xs, color: colors.textSecondary },
+    goalLineHint: { fontSize: font.xs, color: colors.textTertiary, textAlign: 'right', marginTop: spacing.sm },
 
     timeline: { paddingHorizontal: spacing.lg },
     timelineRow: { flexDirection: 'row', minHeight: 88 },

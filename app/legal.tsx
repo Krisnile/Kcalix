@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { images } from '../src/images';
 import { font, Palette, radius, shadow, spacing, useColors } from '../src/theme';
 
 type LegalType = 'about' | 'terms' | 'privacy' | 'licenses';
@@ -45,7 +46,7 @@ function About() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={{ alignItems: 'center' }}>
-      <Text style={{ fontSize: 64, marginTop: spacing.lg }}>🥗</Text>
+      <Image source={images.logo} style={styles.aboutLogo} resizeMode="cover" />
       <Text style={styles.appName}>零卡 Kcalix</Text>
       <Text style={styles.version}>版本 1.0.1</Text>
       <Text style={styles.aboutDesc}>
@@ -143,6 +144,7 @@ const makeStyles = (colors: Palette) =>
   appName: { fontSize: font.xl, fontWeight: '800', color: colors.text, marginTop: spacing.md },
   version: { fontSize: font.sm, color: colors.textTertiary, marginTop: 4 },
   aboutDesc: { fontSize: font.md, color: colors.textSecondary, lineHeight: 24, marginTop: spacing.lg, textAlign: 'center' },
+  aboutLogo: { width: 112, height: 112, borderRadius: 28, marginTop: spacing.lg, ...shadow.card },
   featureCard: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, marginTop: spacing.xl, alignSelf: 'stretch', gap: spacing.md, ...shadow.soft },
   feature: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   featureText: { fontSize: font.md, color: colors.text },

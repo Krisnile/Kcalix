@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PageTitle } from '../../src/components/ui';
 import { categories, FoodCategory, foods } from '../../src/data/foods';
 import { RemoteFood, searchOnlineFoods } from '../../src/data/foodApi';
 import { font, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
@@ -101,8 +102,7 @@ export default function FoodScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>食谱热量库</Text>
-        <Text style={styles.headerSub}>常见食物 + 在线海量数据库搜索</Text>
+        <PageTitle eyebrow="食物档案" title="食谱热量库" subtitle="常见食物 + 在线海量数据库搜索" />
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color={colors.textTertiary} />
           <TextInput
@@ -297,10 +297,8 @@ const makeStyles = (colors: Palette) =>
   StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
-  headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text },
-  headerSub: { fontSize: font.sm, color: colors.textSecondary, marginTop: 4 },
   searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.card, borderRadius: radius.md, paddingHorizontal: spacing.md, height: 48, marginTop: spacing.md, ...shadow.soft },
-  searchInput: { flex: 1, fontSize: font.md, color: colors.text },
+  searchInput: { flex: 1, fontSize: font.md, color: colors.text, outlineStyle: 'none' } as any,
   catBar: { height: 56, marginTop: spacing.sm },
   catContent: { paddingHorizontal: spacing.xl, gap: spacing.sm, alignItems: 'center' },
   catChip: { paddingHorizontal: spacing.lg, height: 36, borderRadius: radius.pill, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', ...shadow.soft },

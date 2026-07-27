@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Dimensions, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChart, LineChart, RingProgress } from '../../src/components/charts';
-import { Card, Empty, Segmented, confirmDelete } from '../../src/components/ui';
+import { Card, Empty, PageTitle, Segmented, confirmDelete } from '../../src/components/ui';
 import { useStore } from '../../src/store/AppStore';
 import { font, mealColors, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
 import { MealType } from '../../src/types';
@@ -31,7 +31,7 @@ export default function RecordScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>记录</Text>
+        <PageTitle eyebrow="今日记录" title="记录" subtitle="饮食、体重和饮水，都在这里" />
         <Segmented
           style={{ marginTop: spacing.md }}
           value={view}
@@ -358,6 +358,16 @@ function WaterView() {
   const bars = week.map((k) => ({ label: weekday(k).replace('周', ''), value: sumWater(data.waterLogs, k), highlight: k === date }));
 
   const quick = [200, 300, 500];
+  const [customWater, setCustomWater] = useState('');
+  const customAmount = parseInt(customWater, 10);
+  const customValid = Number.isFinite(customAmount) && customAmount >= 1 && customAmount <= 5000;
+
+  const addCustomWater = () => {
+    if (!customValid) return;
+    addWater({ date, amount: customAmount });
+    setCustomWater('');
+    Keyboard.dismiss();
+  };
 
   return (
     <View style={{ gap: spacing.lg }}>
@@ -376,7 +386,10 @@ function WaterView() {
       </Card>
 
       <Card>
-        <Text style={styles.cardTitle}>快速记录</Text>
+        <View style={styles.waterSectionHead}>
+          <Text style={styles.cardTitle}>快速记录</Text>
+          <Text style={styles.waterSectionHint}>今天还差 {Math.max(0, goal - today)} ml</Text>
+        </View>
         <View style={styles.quickRow}>
           {quick.map((q) => (
             <Pressable key={q} style={styles.quickBtn} onPress={() => addWater({ date, amount: q })}>
@@ -384,6 +397,27 @@ function WaterView() {
               <Text style={styles.quickText}>+{q}ml</Text>
             </Pressable>
           ))}
+        </View>
+        <View style={styles.inlineWaterInput}>
+          <TextInput
+            value={customWater}
+            onChangeText={(value) => setCustomWater(value.replace(/\D/g, '').slice(0, 4))}
+            placeholder="自定义饮水量"
+            placeholderTextColor={colors.textTertiary}
+            keyboardType="number-pad"
+            returnKeyType="done"
+            onSubmitEditing={addCustomWater}
+            style={styles.inlineWaterText}
+          />
+          <Text style={styles.inlineWaterUnit}>ml</Text>
+          <Pressable
+            disabled={!customValid}
+            onPress={addCustomWater}
+            style={[styles.inlineWaterAdd, !customValid && { opacity: 0.4 }]}
+          >
+            <Ionicons name="add" size={20} color="#fff" />
+            <Text style={styles.inlineWaterAddText}>记录</Text>
+          </Pressable>
         </View>
       </Card>
 
@@ -475,7 +509,6 @@ const makeStyles = (colors: Palette) =>
   StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm, paddingBottom: spacing.md },
-  headerTitle: { fontSize: font.xxl, fontWeight: '800', color: colors.text },
   scroll: { paddingHorizontal: spacing.xl, paddingTop: spacing.sm },
 
   dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xl },
@@ -532,4 +565,17 @@ const makeStyles = (colors: Palette) =>
   quickRow: { flexDirection: 'row', gap: spacing.md },
   quickBtn: { flex: 1, alignItems: 'center', gap: 4, backgroundColor: colors.waterSoft, borderRadius: radius.md, paddingVertical: spacing.lg },
   quickText: { fontSize: font.md, fontWeight: '700', color: colors.water },
+  waterSectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
+  waterSectionHint: { fontSize: font.xs, color: colors.textTertiary },
+  inlineWaterInput: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, height: 52, borderRadius: radius.md, backgroundColor: colors.bg, paddingLeft: spacing.md, borderWidth: 1, borderColor: colors.border },
+  inlineWaterText: {
+    flex: 1,
+    fontSize: font.md,
+    color: colors.text,
+    fontWeight: '600',
+    outlineStyle: 'none',
+  } as any,
+  inlineWaterUnit: { fontSize: font.sm, color: colors.textTertiary, marginRight: spacing.sm },
+  inlineWaterAdd: { height: 40, paddingHorizontal: spacing.md, borderRadius: radius.sm, backgroundColor: colors.water, flexDirection: 'row', alignItems: 'center', gap: 4, marginRight: 5 },
+  inlineWaterAddText: { color: '#fff', fontSize: font.sm, fontWeight: '700' },
   });

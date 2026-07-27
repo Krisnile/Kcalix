@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   genderAvatar: { width: 64, height: 64, borderRadius: 32 },
   genderLabel: { fontSize: font.lg, fontWeight: '700', color: colors.text, marginTop: spacing.sm },
   nameBox: { marginTop: spacing.xl },
-  nameInput: { backgroundColor: colors.card, borderRadius: radius.md, padding: spacing.lg, fontSize: font.md, color: colors.text, marginTop: spacing.sm, ...shadow.soft },
+  nameInput: { backgroundColor: colors.card, borderRadius: radius.md, padding: spacing.lg, fontSize: font.md, color: colors.text, marginTop: spacing.sm, outlineStyle: 'none', ...shadow.soft } as any,
 
   fieldLabel: { fontSize: font.md, fontWeight: '700', color: colors.text },
   stepperCard: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.lg, ...shadow.soft },
@@ -382,7 +382,8 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
     paddingVertical: 0,
-  },
+    outlineStyle: 'none',
+  } as any,
   stepperUnit: { fontSize: font.md, color: colors.textSecondary },
 
   goalRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
