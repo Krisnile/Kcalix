@@ -1,0 +1,53 @@
+name: 缺陷报告
+description: 报告可以稳定复现的问题
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: 请勿在公开 Issue 中提交密码、令牌、用户数据或安全漏洞利用细节。
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本
+      description: 例如 1.0.1。
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 运行平台
+      options:
+        - Android
+        - iOS
+        - Web
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题描述
+      description: 说明实际发生了什么，以及预期结果。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开……
+        2. 点击……
+        3. 观察……
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 截图或日志
+      description: 删除其中的个人数据后再上传。
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充信息
+      description: 设备、系统版本、网络条件或问题出现频率。

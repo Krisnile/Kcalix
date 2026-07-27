@@ -79,3 +79,9 @@ eas build -p android --profile preview
 
 - 卡路里、基础代谢（Mifflin-St Jeor）、TDEE 均为估算值，仅供参考，不能替代专业医疗或营养建议。
 - 数据仅保存在设备本地，卸载或「我的 → 清除所有数据」将永久删除。
+
+## 项目维护
+
+- [变更日志](CHANGELOG.md)：查看正式版本的新增、变更与修复。
+- [参与开发](CONTRIBUTING.md)：了解分支、提交、检查和代码合入规则。
+- [安全策略](SECURITY.md)：了解安全问题的私密报告方式。
