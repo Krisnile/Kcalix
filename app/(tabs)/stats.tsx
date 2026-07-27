@@ -206,7 +206,7 @@ export default function StatsScreen() {
               <Text style={styles.cumHint}>
                 支出 = 每日热量 {allTimeTotals.goalBase} kcal + 运动 {allTimeTotals.exercise} kcal
               </Text>
-              <View style={[styles.cumNet, { backgroundColor: allTimeTotals.net <= 0 ? colors.primarySoft : '#FEF3C7' }]}>
+              <View style={[styles.cumNet, { backgroundColor: allTimeTotals.net <= 0 ? colors.primarySoft : colors.accentSoft }]}>
                 <Text style={styles.cumNetLabel}>净收支</Text>
                 <Text style={[styles.cumNetValue, { color: allTimeTotals.net <= 0 ? colors.primaryDark : colors.warning }]}>
                   {allTimeTotals.net > 0 ? '+' : ''}

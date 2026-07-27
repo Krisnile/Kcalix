@@ -60,11 +60,13 @@ function CustomTabBar({ state, navigation }: any) {
 
         return (
           <Pressable key={tab.name} style={styles.item} onPress={onPress}>
-            <Ionicons
-              name={focused ? tab.iconActive : tab.icon}
-              size={24}
-              color={focused ? colors.primary : colors.textTertiary}
-            />
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons
+                name={focused ? tab.iconActive : tab.icon}
+                size={21}
+                color={focused ? colors.primaryDark : colors.textTertiary}
+              />
+            </View>
             <Text style={[styles.label, focused && { color: colors.primary, fontWeight: '700' }]}>{tab.label}</Text>
           </Pressable>
         );
@@ -78,25 +80,26 @@ const makeStyles = (colors: Palette) =>
     bar: {
       flexDirection: 'row',
       backgroundColor: colors.card,
-      paddingTop: 10,
+      paddingTop: 8,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
-      ...shadow.card,
     },
-    item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3 },
+    item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 },
+    iconWrap: { width: 38, height: 28, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+    iconWrapActive: { backgroundColor: colors.primarySoft },
     label: { fontSize: font.xs, color: colors.textTertiary },
-    centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: 3 },
+    centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: 2 },
     centerBtn: {
-      width: 54,
-      height: 54,
-      borderRadius: radius.pill,
+      width: 46,
+      height: 46,
+      borderRadius: radius.md,
       backgroundColor: colors.primary,
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: -22,
-      borderWidth: 4,
+      marginTop: -17,
+      borderWidth: 3,
       borderColor: colors.card,
       ...shadow.float,
     },
-    centerLabel: { fontSize: font.xs, color: colors.primary, fontWeight: '700' },
+    centerLabel: { fontSize: font.xs, color: colors.textSecondary, fontWeight: '600' },
   });

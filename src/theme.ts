@@ -8,35 +8,37 @@ import { useStore } from './store/AppStore';
 // 浅色主题
 export const lightColors = {
   // 基础背景与文字
-  bg: '#F5F7FA',
-  card: '#FFFFFF',
-  text: '#0F172A',
-  textSecondary: '#64748B',
-  textTertiary: '#94A3B8',
-  border: '#EAEEF3',
-  divider: '#F1F5F9',
+  bg: '#F3F5F4',
+  card: '#FCFDFC',
+  text: '#18211E',
+  textSecondary: '#65716C',
+  textTertiary: '#98A19D',
+  border: '#E2E7E4',
+  divider: '#EDF0EE',
 
-  // 主色（清新薄荷绿）
-  primary: '#16C098',
-  primaryDark: '#0EA47E',
-  primarySoft: '#E4F8F2',
+  // 品牌色（墨玉绿 + 香槟金）
+  primary: '#176B5B',
+  primaryDark: '#0F5145',
+  primarySoft: '#E3EEEA',
+  accent: '#C69A5B',
+  accentSoft: '#F4EDE2',
 
-  // 功能分类色
-  weight: '#6366F1', // 体重 - 靛蓝
-  weightSoft: '#ECECFE',
-  diet: '#16C098', // 饮食 - 绿
-  dietSoft: '#E4F8F2',
-  water: '#38BDF8', // 喝水 - 天蓝
-  waterSoft: '#E2F4FE',
-  exercise: '#FB923C', // 运动 - 橙
-  exerciseSoft: '#FEEEDF',
-  calorie: '#F97316', // 热量 - 橙红
-  calorieSoft: '#FEEDE0',
+  // 低饱和功能色
+  weight: '#7077A8',
+  weightSoft: '#EBECF4',
+  diet: '#3F786B',
+  dietSoft: '#E5EEEB',
+  water: '#5B8FA3',
+  waterSoft: '#E5EEF1',
+  exercise: '#B57852',
+  exerciseSoft: '#F2E9E3',
+  calorie: '#A86C4A',
+  calorieSoft: '#F2E7E1',
 
   // 状态色
-  success: '#22C55E',
-  warning: '#F59E0B',
-  danger: '#EF4444',
+  success: '#3F786B',
+  warning: '#B88746',
+  danger: '#B85C5C',
 
   white: '#FFFFFF',
   black: '#000000',
@@ -47,32 +49,34 @@ export type Palette = typeof lightColors;
 
 // 深色主题（与浅色保持相同的键）
 export const darkColors: Palette = {
-  bg: '#0B1120',
-  card: '#1B2436',
-  text: '#F1F5F9',
-  textSecondary: '#9FB0C3',
-  textTertiary: '#6B7C92',
-  border: '#2C3950',
-  divider: '#141C2B',
+  bg: '#101512',
+  card: '#18201C',
+  text: '#F0F3F1',
+  textSecondary: '#A3ADA8',
+  textTertiary: '#717D77',
+  border: '#2A342F',
+  divider: '#202A25',
 
-  primary: '#1ED5A8',
-  primaryDark: '#3DE0B6',
-  primarySoft: '#12362C',
+  primary: '#72AC9D',
+  primaryDark: '#9BC5BA',
+  primarySoft: '#233B34',
+  accent: '#D2AE77',
+  accentSoft: '#3B3225',
 
-  weight: '#8B95F6',
-  weightSoft: '#23264A',
-  diet: '#1ED5A8',
-  dietSoft: '#12362C',
-  water: '#56C7FA',
-  waterSoft: '#102E40',
-  exercise: '#FBA45C',
-  exerciseSoft: '#36281A',
-  calorie: '#FB8E3C',
-  calorieSoft: '#372418',
+  weight: '#9298BF',
+  weightSoft: '#2D3043',
+  diet: '#72AC9D',
+  dietSoft: '#233B34',
+  water: '#7AA4B4',
+  waterSoft: '#22343B',
+  exercise: '#C79473',
+  exerciseSoft: '#3B2E27',
+  calorie: '#C38868',
+  calorieSoft: '#3C2B24',
 
-  success: '#34D27B',
-  warning: '#FBBF24',
-  danger: '#F87171',
+  success: '#72AC9D',
+  warning: '#D2AE77',
+  danger: '#D77B7B',
 
   white: '#FFFFFF',
   black: '#000000',
@@ -104,10 +108,10 @@ export function useIsDark(): boolean {
 
 // 餐次配色（早/午/晚/加餐）— 两种主题通用
 export const mealColors: Record<string, { color: string; soft: string }> = {
-  breakfast: { color: '#FBBF24', soft: '#FEF6E0' },
-  lunch: { color: '#16C098', soft: '#E4F8F2' },
-  dinner: { color: '#6366F1', soft: '#ECECFE' },
-  snack: { color: '#F472B6', soft: '#FCE9F3' },
+  breakfast: { color: '#B88746', soft: '#F4EDE2' },
+  lunch: { color: '#3F786B', soft: '#E5EEEB' },
+  dinner: { color: '#7077A8', soft: '#EBECF4' },
+  snack: { color: '#9B7185', soft: '#F1E8ED' },
 };
 
 export const spacing = {
@@ -120,10 +124,10 @@ export const spacing = {
 };
 
 export const radius = {
-  sm: 10,
-  md: 16,
-  lg: 22,
-  xl: 28,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 22,
   pill: 999,
 };
 
@@ -140,23 +144,23 @@ export const font = {
 export const shadow = {
   card: {
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.035,
+    shadowRadius: 12,
+    elevation: 2,
   },
   soft: {
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.025,
+    shadowRadius: 6,
+    elevation: 1,
   },
   float: {
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 14,
-    elevation: 8,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 5,
   },
 };

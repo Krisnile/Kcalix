@@ -65,7 +65,7 @@ export function PageTitle({ title }: { title: string }) {
           <Text style={styles.pageTitleText}>{title}</Text>
         </View>
       </View>
-      <View pointerEvents="none" style={styles.pageTitleTrace}>
+      <View style={[styles.pageTitleTrace, { pointerEvents: 'none' }]}>
         <View style={styles.pageTitleTraceRow}>
           <View style={[styles.pageTitleTraceLine, { width: 62 }]} />
           <View style={styles.pageTitleTraceDot} />
@@ -226,10 +226,10 @@ const makeStyles = (colors: Palette) =>
     pageTitleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
     pageTitleLead: { flex: 1, flexDirection: 'row', alignItems: 'stretch', paddingRight: spacing.md },
     pageTitleMark: {
-      width: 4,
+      width: 3,
       minHeight: 40,
       borderRadius: radius.pill,
-      backgroundColor: colors.exercise,
+      backgroundColor: colors.accent,
       marginRight: spacing.md,
     },
     pageTitleCopy: { justifyContent: 'center' },
@@ -242,8 +242,8 @@ const makeStyles = (colors: Palette) =>
     },
     pageTitleTrace: { width: 86, alignItems: 'flex-end', gap: 9, paddingTop: 4 },
     pageTitleTraceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    pageTitleTraceLine: { height: 1, borderRadius: radius.pill, backgroundColor: colors.textTertiary },
-    pageTitleTraceDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.exercise },
+    pageTitleTraceLine: { height: 1, borderRadius: radius.pill, backgroundColor: colors.border },
+    pageTitleTraceDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.accent },
     button: {
       height: 52,
       borderRadius: radius.md,
@@ -255,9 +255,11 @@ const makeStyles = (colors: Palette) =>
     buttonText: { fontSize: font.md, fontWeight: '700' },
     segmented: {
       flexDirection: 'row',
-      backgroundColor: colors.divider,
+      backgroundColor: colors.card,
       borderRadius: radius.pill,
       padding: 4,
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     segItem: { flex: 1 },
     segPill: {
@@ -266,9 +268,9 @@ const makeStyles = (colors: Palette) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    segPillActive: { backgroundColor: colors.card, ...shadow.soft },
+    segPillActive: { backgroundColor: colors.primarySoft },
     segText: { fontSize: font.sm, color: colors.textSecondary, fontWeight: '600' },
-    segTextActive: { color: colors.text, fontWeight: '700' },
+    segTextActive: { color: colors.primaryDark, fontWeight: '700' },
     tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
     tagText: { fontSize: font.xs, fontWeight: '700' },
     empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, gap: 6 },
