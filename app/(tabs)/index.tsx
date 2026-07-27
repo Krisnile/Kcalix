@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChart, LineChart, RingProgress } from '../../src/components/charts';
 import { Card, Empty, PageTitle, Segmented, confirmDelete } from '../../src/components/ui';
 import { useStore } from '../../src/store/AppStore';
-import { font, mealColors, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
+import { font, getMealColors, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
 import { MealType } from '../../src/types';
 import { addDays, lastNDays, prettyDate, shortLabel, timeOf, todayKey, weekday } from '../../src/utils/date';
 import { bmiCategory, calcBMI, calcCalorieGoal } from '../../src/utils/nutrition';
@@ -120,6 +120,7 @@ function MealCard({
 }) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const mealColors = useMemo(() => getMealColors(colors), [colors]);
   const total = items.reduce((s, i) => s + i.calories, 0);
   const mc = mealColors[meal];
   return (

@@ -49,38 +49,38 @@ export type Palette = typeof lightColors;
 
 // 深色主题（与浅色保持相同的键）
 export const darkColors: Palette = {
-  bg: '#11191D',
-  card: '#192429',
-  text: '#EFF7F7',
-  textSecondary: '#A6B7BD',
-  textTertiary: '#71858D',
-  border: '#2A3A40',
-  divider: '#202E33',
+  bg: '#0E1822',
+  card: '#172532',
+  text: '#EDF5F7',
+  textSecondary: '#A7BAC4',
+  textTertiary: '#708792',
+  border: '#293C4B',
+  divider: '#1E303D',
 
-  primary: '#62CDB8',
-  primaryDark: '#8BDCCB',
-  primarySoft: '#213D3A',
-  accent: '#9CA8F2',
-  accentSoft: '#2C304B',
+  primary: '#59D2BD',
+  primaryDark: '#8CE2D3',
+  primarySoft: '#1B3C3C',
+  accent: '#91A2FF',
+  accentSoft: '#293456',
 
-  weight: '#9CA3EB',
-  weightSoft: '#2C304B',
-  diet: '#62CDB8',
-  dietSoft: '#213D3A',
-  water: '#79C2E0',
-  waterSoft: '#203944',
-  exercise: '#F4AD83',
-  exerciseSoft: '#412F27',
-  calorie: '#F09A80',
-  calorieSoft: '#432D29',
+  weight: '#A0A9FF',
+  weightSoft: '#2B3458',
+  diet: '#59D2BD',
+  dietSoft: '#1B3C3C',
+  water: '#70C7EA',
+  waterSoft: '#1D3A4A',
+  exercise: '#F4A77F',
+  exerciseSoft: '#44312F',
+  calorie: '#F18E7A',
+  calorieSoft: '#452D31',
 
-  success: '#62CDB8',
-  warning: '#E1B35F',
-  danger: '#EB8990',
+  success: '#66D8B9',
+  warning: '#F0C469',
+  danger: '#F28A96',
 
   white: '#FFFFFF',
   black: '#000000',
-  shadow: '#000000',
+  shadow: '#050B10',
 };
 
 // 默认（浅色）色板：用于阴影定义、引导页等静态场景
@@ -106,13 +106,16 @@ export function useIsDark(): boolean {
   return resolved === 'dark';
 }
 
-// 餐次配色（早/午/晚/加餐）— 两种主题通用
-export const mealColors: Record<string, { color: string; soft: string }> = {
-  breakfast: { color: '#D9A34D', soft: '#FFF5DF' },
-  lunch: { color: '#45B8A2', soft: '#E3F4F1' },
-  dinner: { color: '#7B83D5', soft: '#EEF0FB' },
-  snack: { color: '#D787B5', soft: '#FBEAF4' },
-};
+// 餐次配色随当前主题生成，避免深色模式出现突兀的浅色标签
+export function getMealColors(palette: Palette): Record<string, { color: string; soft: string }> {
+  const dark = palette === darkColors;
+  return {
+    breakfast: { color: palette.warning, soft: dark ? '#403A2C' : '#FFF5DF' },
+    lunch: { color: palette.diet, soft: palette.dietSoft },
+    dinner: { color: palette.weight, soft: palette.weightSoft },
+    snack: { color: dark ? '#E39BC8' : '#D787B5', soft: dark ? '#422F43' : '#FBEAF4' },
+  };
+}
 
 export const spacing = {
   xs: 4,

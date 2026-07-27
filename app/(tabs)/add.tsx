@@ -19,7 +19,7 @@ import { Button, Card, PageTitle, Segmented } from '../../src/components/ui';
 import { RemoteFood, searchOnlineFoods } from '../../src/data/foodApi';
 import { exercisePresets, foods } from '../../src/data/foods';
 import { useStore } from '../../src/store/AppStore';
-import { font, mealColors, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
+import { font, getMealColors, Palette, radius, shadow, spacing, useColors } from '../../src/theme';
 import { MealType } from '../../src/types';
 import { todayKey } from '../../src/utils/date';
 import { latestWeight, mealLabel, mealOrder } from '../../src/utils/selectors';
@@ -89,6 +89,7 @@ function DietForm({ onDone }: { onDone: (m: string) => void }) {
   const { addFood, data } = useStore();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const mealColors = useMemo(() => getMealColors(colors), [colors]);
   const [date, setDate] = useState(todayKey());
   const params = useLocalSearchParams<{ food?: string; cal?: string }>();
   const [meal, setMeal] = useState<MealType>(guessMeal());
