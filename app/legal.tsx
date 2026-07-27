@@ -144,7 +144,7 @@ const makeStyles = (colors: Palette) =>
   appName: { fontSize: font.xl, fontWeight: '800', color: colors.text, marginTop: spacing.md },
   version: { fontSize: font.sm, color: colors.textTertiary, marginTop: 4 },
   aboutDesc: { fontSize: font.md, color: colors.textSecondary, lineHeight: 24, marginTop: spacing.lg, textAlign: 'center' },
-  aboutLogo: { width: 112, height: 112, borderRadius: 28, marginTop: spacing.lg, ...shadow.card },
+  aboutLogo: { width: 100, height: 100, borderRadius: 25, marginTop: spacing.lg, ...shadow.card },
   featureCard: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, marginTop: spacing.xl, alignSelf: 'stretch', gap: spacing.md, ...shadow.soft },
   feature: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   featureText: { fontSize: font.md, color: colors.text },
