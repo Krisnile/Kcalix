@@ -161,7 +161,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={{ marginBottom: spacing.lg }}>
-          <PageTitle eyebrow="个人中心" title="我的" subtitle="目标、偏好与数据管理" />
+          <PageTitle title="我的" />
         </View>
 
         {/* 个人资料卡 */}

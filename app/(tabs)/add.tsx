@@ -52,7 +52,7 @@ export default function AddScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <PageTitle eyebrow="快速记账" title="添加记录" subtitle="今天的每一笔，都算数" />
+        <PageTitle title="添加记录" />
         <Segmented
           style={{ marginTop: spacing.md }}
           value={mode}

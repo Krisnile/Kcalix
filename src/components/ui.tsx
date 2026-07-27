@@ -54,15 +54,7 @@ export function SectionTitle({ title, action }: { title: string; action?: React.
 }
 
 // 页面标题：以“健康账本”的章节标记统一各主页面
-export function PageTitle({
-  eyebrow,
-  title,
-  subtitle,
-}: {
-  eyebrow: string;
-  title: string;
-  subtitle?: string;
-}) {
+export function PageTitle({ title }: { title: string }) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
@@ -70,22 +62,20 @@ export function PageTitle({
       <View style={styles.pageTitleLead}>
         <View style={styles.pageTitleMark} />
         <View style={styles.pageTitleCopy}>
-          <Text style={styles.pageTitleEyebrow}>{eyebrow}</Text>
           <Text style={styles.pageTitleText}>{title}</Text>
-          {subtitle ? <Text style={styles.pageTitleSub}>{subtitle}</Text> : null}
         </View>
       </View>
       <View pointerEvents="none" style={styles.pageTitleTrace}>
         <View style={styles.pageTitleTraceRow}>
-          <View style={[styles.pageTitleTraceLine, { width: 27 }]} />
+          <View style={[styles.pageTitleTraceLine, { width: 62 }]} />
           <View style={styles.pageTitleTraceDot} />
         </View>
         <View style={styles.pageTitleTraceRow}>
-          <View style={[styles.pageTitleTraceLine, { width: 44, opacity: 0.45 }]} />
+          <View style={[styles.pageTitleTraceLine, { width: 42, opacity: 0.7 }]} />
           <View style={[styles.pageTitleTraceDot, { opacity: 0.55 }]} />
         </View>
         <View style={styles.pageTitleTraceRow}>
-          <View style={[styles.pageTitleTraceLine, { width: 17, opacity: 0.25 }]} />
+          <View style={[styles.pageTitleTraceLine, { width: 72, opacity: 0.45 }]} />
           <View style={[styles.pageTitleTraceDot, { opacity: 0.35 }]} />
         </View>
       </View>
@@ -237,19 +227,12 @@ const makeStyles = (colors: Palette) =>
     pageTitleLead: { flex: 1, flexDirection: 'row', alignItems: 'stretch', paddingRight: spacing.md },
     pageTitleMark: {
       width: 4,
-      minHeight: 48,
+      minHeight: 40,
       borderRadius: radius.pill,
-      backgroundColor: colors.primary,
+      backgroundColor: colors.exercise,
       marginRight: spacing.md,
     },
     pageTitleCopy: { justifyContent: 'center' },
-    pageTitleEyebrow: {
-      fontSize: 10,
-      lineHeight: 13,
-      color: colors.primaryDark,
-      fontWeight: '800',
-      letterSpacing: 1.4,
-    },
     pageTitleText: {
       fontSize: font.xxl,
       lineHeight: 31,
@@ -257,11 +240,10 @@ const makeStyles = (colors: Palette) =>
       color: colors.text,
       letterSpacing: -0.5,
     },
-    pageTitleSub: { fontSize: font.sm, color: colors.textSecondary, marginTop: 2 },
-    pageTitleTrace: { alignItems: 'flex-end', gap: 7, paddingTop: 5 },
+    pageTitleTrace: { width: 86, alignItems: 'flex-end', gap: 9, paddingTop: 4 },
     pageTitleTraceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    pageTitleTraceLine: { height: 2, borderRadius: radius.pill, backgroundColor: colors.primary },
-    pageTitleTraceDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.primary },
+    pageTitleTraceLine: { height: 1, borderRadius: radius.pill, backgroundColor: colors.textTertiary },
+    pageTitleTraceDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.exercise },
     button: {
       height: 52,
       borderRadius: radius.md,

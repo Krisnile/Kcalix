@@ -31,7 +31,7 @@ export default function RecordScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <PageTitle eyebrow="今日记录" title="记录" subtitle="饮食、体重和饮水，都在这里" />
+        <PageTitle title="记录" />
         <Segmented
           style={{ marginTop: spacing.md }}
           value={view}

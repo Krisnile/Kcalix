@@ -176,7 +176,7 @@ export default function StatsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <PageTitle eyebrow="数据洞察" title="统计" subtitle="把记录连起来，看见身体的节奏" />
+        <PageTitle title="统计" />
         <Segmented
           style={{ marginTop: spacing.md }}
           value={period}

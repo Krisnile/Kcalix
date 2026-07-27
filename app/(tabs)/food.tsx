@@ -102,7 +102,7 @@ export default function FoodScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <PageTitle eyebrow="食物档案" title="食谱热量库" subtitle="常见食物 + 在线海量数据库搜索" />
+        <PageTitle title="食谱热量库" />
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color={colors.textTertiary} />
           <TextInput
