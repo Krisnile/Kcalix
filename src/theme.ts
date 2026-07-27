@@ -19,7 +19,7 @@ export const lightColors = {
   // 品牌色（冰川薄荷 + 雾蓝紫）
   primary: '#45B8A2',
   primaryDark: '#288D7D',
-  primarySoft: '#D2ECE6',
+  primarySoft: '#D9F0EB',
   accent: '#7B8DE8',
   accentSoft: '#EEF0FC',
 
@@ -27,7 +27,7 @@ export const lightColors = {
   weight: '#7B83D5',
   weightSoft: '#EEF0FB',
   diet: '#45B8A2',
-  dietSoft: '#D2ECE6',
+  dietSoft: '#D9F0EB',
   water: '#5EAFD2',
   waterSoft: '#E7F4F9',
   exercise: '#F09A68',
