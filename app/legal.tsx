@@ -69,7 +69,9 @@ function Feature({ icon, text }: { icon: any; text: string }) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.feature}>
-      <Ionicons name={icon} size={20} color={colors.primary} />
+      <View style={styles.featureIcon}>
+        <Ionicons name={icon} size={18} color={colors.primaryDark} />
+      </View>
       <Text style={styles.featureText}>{text}</Text>
     </View>
   );
@@ -145,8 +147,9 @@ const makeStyles = (colors: Palette) =>
   version: { fontSize: font.sm, color: colors.textTertiary, marginTop: 4 },
   aboutDesc: { fontSize: font.md, color: colors.textSecondary, lineHeight: 24, marginTop: spacing.lg, textAlign: 'center' },
   aboutLogo: { width: 100, height: 100, borderRadius: 25, marginTop: spacing.lg, ...shadow.card },
-  featureCard: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, marginTop: spacing.xl, alignSelf: 'stretch', gap: spacing.md, ...shadow.soft },
+  featureCard: { backgroundColor: colors.card, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.md, marginTop: spacing.xl, alignSelf: 'stretch', gap: spacing.sm, ...shadow.soft },
   feature: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  featureIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
   featureText: { fontSize: font.md, color: colors.text },
   copyright: { fontSize: font.xs, color: colors.textTertiary, marginTop: spacing.xl, textAlign: 'center' },
 

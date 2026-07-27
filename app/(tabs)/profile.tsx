@@ -447,7 +447,9 @@ function MenuRow({ icon, label, onPress, value }: { icon: any; label: string; on
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable style={styles.menuRow} onPress={onPress}>
-      <Ionicons name={icon} size={20} color={colors.textSecondary} />
+      <View style={styles.menuIcon}>
+        <Ionicons name={icon} size={18} color={colors.primaryDark} />
+      </View>
       <Text style={styles.menuLabel}>{label}</Text>
       {value ? <Text style={styles.menuValue}>{value}</Text> : null}
       <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
@@ -460,7 +462,9 @@ function ToggleRow({ icon, label, value, onChange }: { icon: any; label: string;
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.menuRow}>
-      <Ionicons name={icon} size={20} color={colors.textSecondary} />
+      <View style={styles.menuIcon}>
+        <Ionicons name={icon} size={18} color={colors.primaryDark} />
+      </View>
       <Text style={styles.menuLabel}>{label}</Text>
       <Switch value={value} onValueChange={onChange} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#fff" />
     </View>
@@ -488,15 +492,16 @@ const makeStyles = (colors: Palette) =>
   statUnit: { fontSize: 10, color: colors.textTertiary },
   statLabel: { fontSize: font.xs, color: colors.textSecondary, marginTop: 4 },
 
-  infoCard: { backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: spacing.lg, marginTop: spacing.md, ...shadow.soft },
+  infoCard: { backgroundColor: colors.card, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.lg, marginTop: spacing.md, ...shadow.soft },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md },
   infoRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider },
   infoLabel: { fontSize: font.md, color: colors.textSecondary },
   infoValue: { fontSize: font.md, color: colors.text, fontWeight: '600' },
 
   groupTitle: { fontSize: font.sm, color: colors.textTertiary, fontWeight: '600', marginBottom: spacing.sm, marginLeft: spacing.xs },
-  groupCard: { backgroundColor: colors.card, borderRadius: radius.lg, paddingHorizontal: spacing.lg, ...shadow.soft },
+  groupCard: { backgroundColor: colors.card, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, ...shadow.soft },
   menuRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
+  menuIcon: { width: 34, height: 34, borderRadius: 11, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
   menuLabel: { flex: 1, fontSize: font.md, color: colors.text },
   menuValue: { fontSize: font.sm, color: colors.textTertiary },
 
