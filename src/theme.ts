@@ -38,7 +38,7 @@ export const lightColors = {
   // 状态色
   success: '#45A98F',
   warning: '#D9A34D',
-  danger: '#D96D74',
+  danger: '#D94D59',
 
   white: '#FFFFFF',
   black: '#000000',
@@ -76,7 +76,7 @@ export const darkColors: Palette = {
 
   success: '#64D4B4',
   warning: '#EFC263',
-  danger: '#EF8994',
+  danger: '#F07482',
 
   white: '#FFFFFF',
   black: '#000000',

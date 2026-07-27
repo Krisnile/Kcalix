@@ -505,7 +505,7 @@ const makeStyles = (colors: Palette) =>
   menuLabel: { flex: 1, fontSize: font.md, color: colors.text },
   menuValue: { fontSize: font.sm, color: colors.textTertiary },
 
-  dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: spacing.xl, paddingVertical: spacing.lg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.danger + '40' },
+  dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: spacing.xl, paddingVertical: spacing.lg, borderRadius: radius.md, borderWidth: 1, borderColor: colors.danger + '78', backgroundColor: colors.danger + '12' },
   dangerText: { color: colors.danger, fontSize: font.md, fontWeight: '700' },
   version: { textAlign: 'center', color: colors.textTertiary, fontSize: font.xs, marginTop: spacing.lg },
 
