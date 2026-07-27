@@ -16,18 +16,18 @@ export const lightColors = {
   border: '#DFEAEB',
   divider: '#EDF3F3',
 
-  // 品牌色（柔和青草绿 + 雾蓝紫）
-  primary: '#51A76A',
-  primaryDark: '#347A4A',
-  primarySoft: '#D8EFDA',
+  // 品牌色（清透青绿 + 雾蓝紫）
+  primary: '#45B8A2',
+  primaryDark: '#288D7D',
+  primarySoft: '#D6EFE9',
   accent: '#7B8DE8',
   accentSoft: '#EEF0FC',
 
   // 清透、同明度的功能色
   weight: '#7B83D5',
   weightSoft: '#EEF0FB',
-  diet: '#51A76A',
-  dietSoft: '#D8EFDA',
+  diet: '#45B8A2',
+  dietSoft: '#D6EFE9',
   water: '#5EAFD2',
   waterSoft: '#E7F4F9',
   exercise: '#F09A68',
